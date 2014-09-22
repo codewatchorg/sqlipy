@@ -126,6 +126,7 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
             lprivs = ''
             lroles = ''
             ldbs = ''
+            lpswds = ''
 
             try:
               req = urllib2.Request('http://' + self.sqlmapip + ':' + self.sqlmapport + '/scan/' + self.sqlmaptask + '/data')
@@ -184,6 +185,35 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
 
                   if firstuser == False:
                     lusers = 'Users:<ul>' + lusers + '</ul><BR>'
+
+                # Get list of passwords
+                elif findings['type'] == 8:
+                  userdata = ''
+                  userpswds = ''
+                  firstuser = True
+
+                  for users in findings['value']:
+                    firstpswd = True
+
+                    if firstuser:
+                      firstuser = False
+                      userdata = '<li>'+users+'</li>'
+                    else:
+                      userdata = userdata + '<li>'+users+'</li>'
+
+                    for pswd in findings['value'][users]:
+                      if firstpswd:
+                        firstswd = False
+                        userpswds = '<li>'+pswd+'</li>'
+                      else:
+                        userpswds = userpswds + '<li>'+pswd+'</li>'
+
+                    lpswds = lpswds + userdata + '<ul>'+userpswds+'</ul>'
+                    userdata = ''
+                    userpswds = ''
+
+                  if firstuser == False:
+                    lpswds = 'Password Hashes per User:<ul>'+lpswds+'</ul><BR>'
 
                 # Get list of privileges
                 elif findings['type'] == 9:
@@ -257,7 +287,7 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
                     ldbs = 'Databases:<ul>' + ldbs + '</ul><BR>'
 
               scanIssue = SqlMapScanIssue(self.httpmessage.getHttpService(), self.url, [self.httpmessage], 'SQLMap Scan Finding',
-                    'The application has been found to be vulnerable to SQL injection by SQLMap.  The following payloads successfully identified SQL injection vulnerabilities:<p>'+payloads+'</p><p>Enumerated Data:</p><BR><p>'+dbtype+': '+banner+'</p><p>'+cu+'</p><p>'+cdb+'</p><p>'+hostname+'</p><p>'+isdba+'</p><p>'+lusers+'</p><p>'+lprivs+'</p><p>'+lroles+'</p><p>'+ldbs+'</p>', 'Certain', 'High')
+                    'The application has been found to be vulnerable to SQL injection by SQLMap.  The following payloads successfully identified SQL injection vulnerabilities:<p>'+payloads+'</p><p>Enumerated Data:</p><BR><p>'+dbtype+': '+banner+'</p><p>'+cu+'</p><p>'+cdb+'</p><p>'+hostname+'</p><p>'+isdba+'</p><p>'+lusers+'</p><p>'+lpswds+'</p><p>'+lprivs+'</p><p>'+lroles+'</p><p>'+ldbs+'</p>', 'Certain', 'High')
               self.cbacks.addScanIssue(scanIssue)
               print 'If the page was vulnerable, then findings for task '+self.sqlmaptask+' have been reported.\n'
               break
@@ -405,6 +435,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jCheckDBA = swing.JCheckBox('Is DBA?')
     self._jCheckUsers = swing.JCheckBox('List Users')
     self._jCheckPrivs = swing.JCheckBox('List Privs')
+    self._jCheckPswds = swing.JCheckBox('List Passwords')
     self._jCheckRoles = swing.JCheckBox('List Roles')
     self._jCheckDBs = swing.JCheckBox('List DBs')
     self._jSeparator5 = swing.JSeparator()
@@ -499,9 +530,10 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jCheckHost.setBounds(469, 608, 103, 29)
     self._jCheckDBA.setBounds(599, 608, 105, 29)
     self._jCheckUsers.setBounds(15, 655, 101, 29)
-    self._jCheckPrivs.setBounds(191, 655, 135, 29)
-    self._jCheckRoles.setBounds(344, 655, 95, 29)
-    self._jCheckDBs.setBounds(469, 655, 99, 29)
+    self._jCheckPswds.setBounds(191, 655, 135, 29)
+    self._jCheckPrivs.setBounds(344, 655, 95, 29)
+    self._jCheckRoles.setBounds(469, 655, 99, 29)
+    self._jCheckDBs.setBounds(599, 655, 89, 29)
     self._jSeparator5.setBounds(15, 696, 790, 10)
     self._jLabelThreads.setBounds(15, 719, 63, 20)
     self._jLabelDelay.setBounds(193, 719, 45, 20)
@@ -561,6 +593,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jScanPanel.add(self._jCheckHost)
     self._jScanPanel.add(self._jCheckDBA)
     self._jScanPanel.add(self._jCheckUsers)
+    self._jScanPanel.add(self._jCheckPswds)
     self._jScanPanel.add(self._jCheckPrivs)
     self._jScanPanel.add(self._jCheckRoles)
     self._jScanPanel.add(self._jCheckDBs)
@@ -721,6 +754,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     hostname = ''
     isdba = ''
     lusers = ''
+    lpswds = ''
     lprivs = ''
     lroles = ''
     ldbs = ''
@@ -788,6 +822,12 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     else:
       lusersstatus = False
 
+    if self._jCheckPswds.isSelected():
+      lpswds = ' --passwords'
+      lpswdsstatus = True
+    else:
+      lpswdsstatus = False
+
     if self._jCheckPrivs.isSelected():
       lprivs = ' --privileges'
       lprivsstatus = True
@@ -843,13 +883,13 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
       paramcmd = ' -p \'' + self._jTextFieldParam.getText() + '\''
 
     try:
-      print 'SQLMap Command: -u \'' + self._jTextFieldURL.getText()  +  '\'' + datacmd + cookiecmd + uacmd + referercmd + proxycmd + ' --delay=' + str(self._jComboDelay.getSelectedItem()) + ' --timeout=' + str(self._jComboTimeout.getSelectedItem()) + ' --retries=' + str(self._jComboDelay.getSelectedItem()) + paramcmd + dbmscmd + oscmd + tampercmd + ' --level=' + str(self._jComboLevel.getSelectedItem()) + ' --risk=' + str(self._jComboRisk.getSelectedItem()) + textonly + hpp + ' --threads=' + str(self._jComboThreads.getSelectedItem()) + ' -b' + cu + cdb + hostname + isdba + lusers + lprivs + lroles + ldbs + '\n'
+      print 'SQLMap Command: -u \'' + self._jTextFieldURL.getText()  +  '\'' + datacmd + cookiecmd + uacmd + referercmd + proxycmd + ' --delay=' + str(self._jComboDelay.getSelectedItem()) + ' --timeout=' + str(self._jComboTimeout.getSelectedItem()) + ' --retries=' + str(self._jComboDelay.getSelectedItem()) + paramcmd + dbmscmd + oscmd + tampercmd + ' --level=' + str(self._jComboLevel.getSelectedItem()) + ' --risk=' + str(self._jComboRisk.getSelectedItem()) + textonly + hpp + ' --threads=' + str(self._jComboThreads.getSelectedItem()) + ' -b' + cu + cdb + hostname + isdba + lusers + lpswds + lprivs + lroles + ldbs + '\n'
       req = urllib2.Request('http://' + self._jTextFieldScanIPListen.getText() + ':' + self._jTextFieldScanPortListen.getText() + '/task/new')
       resp = json.load(urllib2.urlopen(req))
 
       if resp['success'] == True:
         sqlitask = resp['taskid']
-        sqliopts = {'getUsers': lusersstatus, 'delay': self._jComboDelay.getSelectedItem(), 'isDba': isdbastatus, 'risk': self._jComboRisk.getSelectedItem(), 'getCurrentUser': custatus, 'getRoles': lrolesstatus, 'getPrivileges': lprivsstatus, 'testParameter': paramdata, 'timeout': self._jComboTimeout.getSelectedItem(), 'level': self._jComboLevel.getSelectedItem(), 'getCurrentDb': cdbstatus, 'cookie': cookiedata, 'proxy': proxy, 'os': os, 'threads': self._jComboThreads.getSelectedItem(), 'url': self._jTextFieldURL.getText(), 'getDbs': ldbsstatus, 'referer': refererdata, 'retries': self._jComboRetry.getSelectedItem(), 'getHostname': hostnamestatus, 'agent': uadata, 'dbms': dbms, 'tamper': tamperdata, 'hpp': hppstatus, 'getBanner': 'true', 'data': postdata, 'textOnly': textonlystatus}
+        sqliopts = {'getUsers': lusersstatus, 'getPasswordHashes': lpswdsstatus, 'delay': self._jComboDelay.getSelectedItem(), 'isDba': isdbastatus, 'risk': self._jComboRisk.getSelectedItem(), 'getCurrentUser': custatus, 'getRoles': lrolesstatus, 'getPrivileges': lprivsstatus, 'testParameter': paramdata, 'timeout': self._jComboTimeout.getSelectedItem(), 'level': self._jComboLevel.getSelectedItem(), 'getCurrentDb': cdbstatus, 'answers': 'crack=N,dict=N', 'cookie': cookiedata, 'proxy': proxy, 'os': os, 'threads': self._jComboThreads.getSelectedItem(), 'url': self._jTextFieldURL.getText(), 'getDbs': ldbsstatus, 'referer': refererdata, 'retries': self._jComboRetry.getSelectedItem(), 'getHostname': hostnamestatus, 'agent': uadata, 'dbms': dbms, 'tamper': tamperdata, 'hpp': hppstatus, 'getBanner': 'true', 'data': postdata, 'textOnly': textonlystatus}
 
         print 'Created SQLMap Task: ' + sqlitask + '\n'
 
