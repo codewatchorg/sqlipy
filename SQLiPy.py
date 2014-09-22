@@ -101,7 +101,7 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
 
   def checkResults(self):
     time.sleep(30)
-    print 'Checking results on task: '+self.sqlmaptask
+    print 'Checking results on task: '+self.sqlmaptask+'\n'
 
     while True:
       try:
@@ -110,11 +110,11 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
         resp = json.load(urllib2.urlopen(req))
 
         if resp['status'] == "running":
-          print 'Scan for task '+self.sqlmaptask+' is still running.'
+          print 'Scan for task '+self.sqlmaptask+' is still running.\n'
           time.sleep(30)
         elif resp['status'] == "terminated":
           if resp['returncode'] == 0:
-            print 'Scan for task '+self.sqlmaptask+' completed.  Gathering results.'
+            print 'Scan for task '+self.sqlmaptask+' completed.  Gathering results.\n'
             dbtype = ''
             payloads = ''
             banner = ''
@@ -260,23 +260,23 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
               scanIssue = SqlMapScanIssue(self.httpmessage.getHttpService(), self.url, [self.httpmessage], 'SQLMap Scan Finding',
                     'The application has been found to be vulnerable to SQL injection by SQLMap.  The following payloads successfully identified SQL injection vulnerabilities:<p>'+payloads+'</p><p>Enumerated Data:</p><BR><p>'+dbtype+': '+banner+'</p><p>'+cu+'</p><p>'+cdb+'</p><p>'+hostname+'</p><p>'+isdba+'</p><p>'+lusers+'</p><p>'+lprivs+'</p><p>'+lroles+'</p><p>'+ldbs+'</p>', 'Certain', 'High')
               self.cbacks.addScanIssue(scanIssue)
-              print 'If the page was vulnerable, then findings for task '+self.sqlmaptask+' have been reported.'
+              print 'If the page was vulnerable, then findings for task '+self.sqlmaptask+' have been reported.\n'
               break
 
             except:
-              print 'No results for SQLMap task: '+self.sqlmaptask
+              print 'No results for SQLMap task: '+self.sqlmaptask+'\n'
               break
 
           else:
-            print 'SQLMap scan failed for task: '+self.sqlmaptask
+            print 'SQLMap scan failed for task: '+self.sqlmaptask+'\n'
             break
 
         else:
-          print 'SQLMap scan failed for task: '+self.sqlmaptask
+          print 'SQLMap scan failed for task: '+self.sqlmaptask+'\n'
           break
 
       except:
-        print 'Thread failed to get results for SQLMap task: ' + self.sqlmaptask
+        print 'Thread failed to get results for SQLMap task: ' + self.sqlmaptask+'\n'
         break
 
 class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
@@ -358,7 +358,6 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jPanelConstraints.gridx = 0
     self._jPanelConstraints.gridy = 4
     self._jPanelConstraints.gridwidth = 2
-    self._jPanelConstraints.anchor = awt.GridBagConstraints.PAGE_END
     self._jPanel.add(self._jButtonStartAPI, self._jPanelConstraints)
 
     # Create SQLMap scanner panel
