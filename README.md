@@ -15,7 +15,7 @@ Usage
 
 SQLiPy relies on a running instance of the SQLMap API server.  You can manually start the server with:
 <pre>
-  python sqlmapapi.py -s -H <ip> -p <port>
+  python sqlmapapi.py -s -H &lt;ip&gt; -p &lt;port&gt;
 </pre>
 
 Or, you can use the SQLMap API tab to select the IP/Port on which to run, as well as the path to python and sqlmapapi.py on your system.
