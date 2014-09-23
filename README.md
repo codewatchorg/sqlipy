@@ -25,3 +25,5 @@ Once the SQLMap API is running, it is just a matter of right mouse clicking in t
 This will populate the SQLMap Scanner tab of the plugin with information about that request.  Clicking the 'Start Scan' button will execute a scan.
 
 If the page is vulnerable to SQL injection, then a thread from the plugin will poll the results and add them to the Scanner Results tab.
+
+For more information, see the post here: https://www.codewatch.org/blog/?p=402
