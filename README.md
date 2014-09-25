@@ -8,8 +8,8 @@ SQLMap comes with a RESTful based server that will execute SQLMap scans.  This p
 Requirements
 ============
 
-Jython beta, due to the use of json<BR>
-Java 1.7 or 1.8 (the beta version of Jython requires this)
+Jython 2.7 beta, due to the use of json<BR>
+Java 1.7 or 1.8 (the beta version of Jython 2.7 requires this)
 
 Usage
 =====
