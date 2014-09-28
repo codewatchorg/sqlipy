@@ -132,8 +132,10 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
               req = urllib2.Request('http://' + self.sqlmapip + ':' + self.sqlmapport + '/scan/' + self.sqlmaptask + '/data')
               req.add_header('Content-Type', 'application/json')
               resp = json.load(urllib2.urlopen(req))
+              vulnerable = False
 
               for findings in resp['data']:
+                vulnerable = True
                 # Get basic scan info
                 if findings['type'] == 0:
                   dbtype = findings['value'][0]['dbms']
@@ -286,10 +288,14 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
                   if firstdb == False:
                     ldbs = 'Databases:<ul>' + ldbs + '</ul><BR>'
 
-              scanIssue = SqlMapScanIssue(self.httpmessage.getHttpService(), self.url, [self.httpmessage], 'SQLMap Scan Finding',
+              if vulnerable:
+                scanIssue = SqlMapScanIssue(self.httpmessage.getHttpService(), self.url, [self.httpmessage], 'SQLMap Scan Finding',
                     'The application has been found to be vulnerable to SQL injection by SQLMap.  The following payloads successfully identified SQL injection vulnerabilities:<p>'+payloads+'</p><p>Enumerated Data:</p><BR><p>'+dbtype+': '+banner+'</p><p>'+cu+'</p><p>'+cdb+'</p><p>'+hostname+'</p><p>'+isdba+'</p><p>'+lusers+'</p><p>'+lpswds+'</p><p>'+lprivs+'</p><p>'+lroles+'</p><p>'+ldbs+'</p>', 'Certain', 'High')
-              self.cbacks.addScanIssue(scanIssue)
-              print 'If the page was vulnerable, then findings for task '+self.sqlmaptask+' have been reported.\n'
+                self.cbacks.addScanIssue(scanIssue)
+                print 'SQLi vulnerabilities were found for task '+self.sqlmaptask+' and have been reported.\n'
+              else:
+                print 'Scan completed for task '+self.sqlmaptask+' but SQLi vulnerabilities were not found.\n'
+
               break
 
             except:
