@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.1
+Version:        0.3
 Date:           9/3/2015
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -320,6 +320,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
   tamperfile = ''
   threads = []
   scanMessage = ''
+  scantasks = []
 
   # Implement IBurpExtender
   def registerExtenderCallbacks(self, callbacks):
@@ -629,10 +630,37 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jScrollPaneMain.setViewportView(self._jScanPanel)
     self._jScrollPaneMain.setPreferredSize(awt.Dimension(999,999))
 
+    # Create SQLMap log JPanel
+    self._jLogPanel = swing.JPanel()
+    self._jLogPanel.setLayout(None)
+
+    # Create label, combobox, and button to get logs and textarea to display them
+    self._jLabelLog = swing.JLabel("Logs for Scan ID:")
+    self._jComboLogs = swing.JComboBox(self.scantasks)
+    self._jButtonGetLogs = swing.JButton('Get Logs', actionPerformed=self.getLogs)
+    self._jTextLogs = swing.JTextArea()
+    self._jTextLogs.setColumns(50)
+    self._jTextLogs.setRows(50)
+    self._jTextLogs.setLineWrap(True)
+    self._jTextLogs.setEditable(False)
+    self._jScrollPaneLogs = swing.JScrollPane(self._jTextLogs)
+    self._jScrollPaneLogs.setVerticalScrollBarPolicy(swing.JScrollPane.VERTICAL_SCROLLBAR_ALWAYS)
+
+    self._jLabelLog.setBounds(15, 16, 126, 20)
+    self._jComboLogs.setBounds(167, 16, 535, 20)
+    self._jButtonGetLogs.setBounds(743, 16, 103, 20)
+    self._jScrollPaneLogs.setBounds(15, 58, 846, 400)
+
+    self._jLogPanel.add(self._jLabelLog)
+    self._jLogPanel.add(self._jComboLogs)
+    self._jLogPanel.add(self._jButtonGetLogs)
+    self._jLogPanel.add(self._jScrollPaneLogs)
+
     # Setup Tabs
     self._jConfigTab = swing.JTabbedPane()
     self._jConfigTab.addTab("SQLMap API", self._jPanel)
     self._jConfigTab.addTab("SQLMap Scanner", self._jScrollPaneMain)
+    self._jConfigTab.addTab("SQLMap Logs", self._jLogPanel)
 
     callbacks.customizeUiComponent(self._jConfigTab)
     callbacks.addSuiteTab(self)
@@ -731,6 +759,22 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
       file = selectFile.getSelectedFile()
       self.tamperfile = file.getPath()
       self._jLabelTamper.setText('Tamper Script: ' + file.getPath())
+
+  def getLogs(self, button):
+    try:
+      req = urllib2.Request('http://' + self._jTextFieldScanIPListen.getText() + ':' + self._jTextFieldScanPortListen.getText() + '/scan/' + self._jComboLogs.getSelectedItem() + '/log')
+      resp = json.load(urllib2.urlopen(req))
+
+      if resp['success'] == True:
+        logdata = ''
+        for logs in resp['log']:
+          logdata = logdata + logs['level'] + ': ' + logs['time'] + ' - ' + logs['message'] + '\n'
+
+        self._jTextLogs.setText(logdata)
+      else:
+        print 'Failed to get logs for '+self._jComboLogs.getSelectedItem()+'\n'
+    except:
+      print 'Failed to get logs for '+self._jComboLogs.getSelectedItem()+'\n'
 
   def startAPI(self, button):
     try:
@@ -925,6 +969,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
                 t = threading.Thread(target=findings.checkResults)
                 self.threads.append(t)
                 t.start()
+                self._jComboLogs.addItem(sqlitask)
                 print 'Started SQLMap Scan on Task ' + sqlitask +' with Engine ID: ' + str(resp['engineid']) + ' - ' + self._jTextFieldURL.getText() + '\n'
               else:
                 print 'Failed to start SQLMap Scan for Task: ' + sqlitask + '\n'
