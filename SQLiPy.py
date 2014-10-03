@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.3
+Version:        0.3.1
 Date:           9/3/2015
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -321,6 +321,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
   threads = []
   scanMessage = ''
   scantasks = []
+  scancmds = {}
 
   # Implement IBurpExtender
   def registerExtenderCallbacks(self, callbacks):
@@ -770,7 +771,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
         for logs in resp['log']:
           logdata = logdata + logs['level'] + ': ' + logs['time'] + ' - ' + logs['message'] + '\n'
 
-        self._jTextLogs.setText(logdata)
+        self._jTextLogs.setText('Log results for: ' + self.scancmds[self._jComboLogs.getSelectedItem()] + logdata)
       else:
         print 'Failed to get logs for '+self._jComboLogs.getSelectedItem()+'\n'
     except:
@@ -914,26 +915,27 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
 
     if re.search('[a-zA-Z0-9]', self._jTextData.getText()) is not None:
       postdata = self._jTextData.getText()
-      datacmd = ' --data=\'' + self._jTextData.getText() + '\''
+      datacmd = ' --data="' + self._jTextData.getText() + '"'
 
     if re.search('[a-zA-Z0-9]', self._jTextFieldCookie.getText()) is not None:
       cookiedata = self._jTextFieldCookie.getText()
-      cookiecmd = ' --cookie=\'' + self._jTextFieldCookie.getText() + '\''
+      cookiecmd = ' --cookie="' + self._jTextFieldCookie.getText() + '"'
 
     if re.search('[a-zA-Z0-9]', self._jTextFieldUA.getText()) is not None:
       uadata = self._jTextFieldUA.getText()
-      uacmd = ' --user-agent=\'' + self._jTextFieldUA.getText() + '\''
+      uacmd = ' --user-agent="' + self._jTextFieldUA.getText() + '"'
 
     if re.search('[a-zA-Z0-9]', self._jTextFieldReferer.getText()) is not None:
       refererdata = self._jTextFieldReferer.getText()
-      referercmd = ' --referer=\'' + self._jTextFieldReferer.getText() + '\''
+      referercmd = ' --referer="' + self._jTextFieldReferer.getText() + '"'
 
     if re.search('[a-zA-Z0-9]', self._jTextFieldParam.getText()) is not None:
       paramdata = self._jTextFieldParam.getText()
-      paramcmd = ' -p \'' + self._jTextFieldParam.getText() + '\''
+      paramcmd = ' -p "' + self._jTextFieldParam.getText() + '"'
 
     try:
-      print 'SQLMap Command: -u \'' + self._jTextFieldURL.getText()  +  '\'' + datacmd + cookiecmd + uacmd + referercmd + proxycmd + ' --delay=' + str(self._jComboDelay.getSelectedItem()) + ' --timeout=' + str(self._jComboTimeout.getSelectedItem()) + ' --retries=' + str(self._jComboDelay.getSelectedItem()) + paramcmd + dbmscmd + oscmd + tampercmd + ' --level=' + str(self._jComboLevel.getSelectedItem()) + ' --risk=' + str(self._jComboRisk.getSelectedItem()) + textonly + hpp + ' --threads=' + str(self._jComboThreads.getSelectedItem()) + ' -b' + cu + cdb + hostname + isdba + lusers + lpswds + lprivs + lroles + ldbs + ' --batch --answers="crack=N,dict=N"\n'
+      print 'SQLMap Command: -u "' + self._jTextFieldURL.getText()  +  '"' + datacmd + cookiecmd + uacmd + referercmd + proxycmd + ' --delay=' + str(self._jComboDelay.getSelectedItem()) + ' --timeout=' + str(self._jComboTimeout.getSelectedItem()) + ' --retries=' + str(self._jComboDelay.getSelectedItem()) + paramcmd + dbmscmd + oscmd + tampercmd + ' --level=' + str(self._jComboLevel.getSelectedItem()) + ' --risk=' + str(self._jComboRisk.getSelectedItem()) + textonly + hpp + ' --threads=' + str(self._jComboThreads.getSelectedItem()) + ' -b' + cu + cdb + hostname + isdba + lusers + lpswds + lprivs + lroles + ldbs + ' --batch --answers="crack=N,dict=N"\n'
+      sqlmapcmd = 'sqlmap.py -u "' + self._jTextFieldURL.getText()  +  '"' + datacmd + cookiecmd + uacmd + referercmd + proxycmd + ' --delay=' + str(self._jComboDelay.getSelectedItem()) + ' --timeout=' + str(self._jComboTimeout.getSelectedItem()) + ' --retries=' + str(self._jComboDelay.getSelectedItem()) + paramcmd + dbmscmd + oscmd + tampercmd + ' --level=' + str(self._jComboLevel.getSelectedItem()) + ' --risk=' + str(self._jComboRisk.getSelectedItem()) + textonly + hpp + ' --threads=' + str(self._jComboThreads.getSelectedItem()) + ' -b' + cu + cdb + hostname + isdba + lusers + lpswds + lprivs + lroles + ldbs + ' --batch --answers="crack=N,dict=N"\n\n'
       req = urllib2.Request('http://' + self._jTextFieldScanIPListen.getText() + ':' + self._jTextFieldScanPortListen.getText() + '/task/new')
       resp = json.load(urllib2.urlopen(req))
 
@@ -970,6 +972,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
                 self.threads.append(t)
                 t.start()
                 self._jComboLogs.addItem(sqlitask)
+                self.scancmds[sqlitask] = sqlmapcmd
                 print 'Started SQLMap Scan on Task ' + sqlitask +' with Engine ID: ' + str(resp['engineid']) + ' - ' + self._jTextFieldURL.getText() + '\n'
               else:
                 print 'Failed to start SQLMap Scan for Task: ' + sqlitask + '\n'
