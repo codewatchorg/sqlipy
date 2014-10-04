@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.3.1
+Version:        0.3.2
 Date:           9/3/2015
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -763,7 +763,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
 
   def getLogs(self, button):
     try:
-      req = urllib2.Request('http://' + self._jTextFieldScanIPListen.getText() + ':' + self._jTextFieldScanPortListen.getText() + '/scan/' + self._jComboLogs.getSelectedItem() + '/log')
+      req = urllib2.Request('http://' + self._jTextFieldScanIPListen.getText() + ':' + self._jTextFieldScanPortListen.getText() + '/scan/' + self._jComboLogs.getSelectedItem().split('-')[0] + '/log')
       resp = json.load(urllib2.urlopen(req))
 
       if resp['success'] == True:
@@ -771,7 +771,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
         for logs in resp['log']:
           logdata = logdata + logs['level'] + ': ' + logs['time'] + ' - ' + logs['message'] + '\n'
 
-        self._jTextLogs.setText('Log results for: ' + self.scancmds[self._jComboLogs.getSelectedItem()] + logdata)
+        self._jTextLogs.setText('Log results for: ' + self.scancmds[self._jComboLogs.getSelectedItem().split('-')[0]] + logdata)
       else:
         print 'Failed to get logs for '+self._jComboLogs.getSelectedItem()+'\n'
     except:
@@ -971,7 +971,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
                 t = threading.Thread(target=findings.checkResults)
                 self.threads.append(t)
                 t.start()
-                self._jComboLogs.addItem(sqlitask)
+                self._jComboLogs.addItem(sqlitask + '-' + self._jTextFieldURL.getText())
                 self.scancmds[sqlitask] = sqlmapcmd
                 print 'Started SQLMap Scan on Task ' + sqlitask +' with Engine ID: ' + str(resp['engineid']) + ' - ' + self._jTextFieldURL.getText() + '\n'
               else:
