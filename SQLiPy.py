@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.3.2
+Version:        0.3.3
 Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -466,6 +466,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jSeparator8 = swing.JSeparator()
     self._jLabelTamper = swing.JLabel()
     self._jButtonSetTamper = swing.JButton('Tamper', actionPerformed=self.setTamper)
+    self._jButtonClearTamper = swing.JButton('Clear', actionPerformed=self.clearTamper)
     self._jButtonStartScan = swing.JButton('Start Scan', actionPerformed=self.startScan)
     self._jLabelScanAPI = swing.JLabel()
 
@@ -562,6 +563,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jSeparator8.setBounds(15, 887, 790, 10)
     self._jLabelTamper.setBounds(482, 844, 106, 20)
     self._jButtonSetTamper.setBounds(606, 840, 87, 29)
+    self._jButtonClearTamper.setBounds(721, 840, 67, 29)
     self._jButtonStartScan.setBounds(346, 905, 103, 29)
     self._jLabelScanAPI.setBounds(167, 16, 200, 20)
 
@@ -625,6 +627,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jScanPanel.add(self._jSeparator8)
     self._jScanPanel.add(self._jLabelTamper)
     self._jScanPanel.add(self._jButtonSetTamper)
+    self._jScanPanel.add(self._jButtonClearTamper)
     self._jScanPanel.add(self._jButtonStartScan)
     self._jScanPanel.add(self._jLabelScanAPI)
     self._jScrollPaneMain = swing.JScrollPane(self._jScanPanel)
@@ -751,15 +754,25 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
 
   def setTamper(self, e):
     selectFile = swing.JFileChooser()
+    selectFile.setMultiSelectionEnabled(True)
     filter = swing.filechooser.FileNameExtensionFilter("python files", ["py"])
     selectFile.addChoosableFileFilter(filter)
 
     returnedFile = selectFile.showDialog(self._jPanel, "Tamper")
 
     if returnedFile == swing.JFileChooser.APPROVE_OPTION:
-      file = selectFile.getSelectedFile()
-      self.tamperfile = file.getPath()
-      self._jLabelTamper.setText('Tamper Script: ' + file.getPath())
+      files = selectFile.getSelectedFiles()
+      tampers = ''
+
+      for file in files:
+        tampers = tampers + file.getPath().rsplit('\\', 1)[1] + ','
+
+      self.tamperfile = tampers[0:-1]
+      self._jLabelTamper.setText(tampers[0:-1])
+
+  def clearTamper(self, e):
+    self._jLabelTamper.setText('Tamper Script:')
+    self.tamperfile = ''
 
   def getLogs(self, button):
     try:
@@ -910,7 +923,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
       oscmd = ' --os=' + self._jComboOS.getSelectedItem()
 
     if re.search('[a-zA-Z0-9]', self.tamperfile) is not None:
-      tampercmd = ' --tamper=' + self.tamperfile
+      tampercmd = ' --tamper="' + self.tamperfile + '"'
       tamperdata = self.tamperfile
 
     if re.search('[a-zA-Z0-9]', self._jTextData.getText()) is not None:
@@ -934,8 +947,8 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
       paramcmd = ' -p "' + self._jTextFieldParam.getText() + '"'
 
     try:
-      print 'SQLMap Command: -u "' + self._jTextFieldURL.getText()  +  '"' + datacmd + cookiecmd + uacmd + referercmd + proxycmd + ' --delay=' + str(self._jComboDelay.getSelectedItem()) + ' --timeout=' + str(self._jComboTimeout.getSelectedItem()) + ' --retries=' + str(self._jComboDelay.getSelectedItem()) + paramcmd + dbmscmd + oscmd + tampercmd + ' --level=' + str(self._jComboLevel.getSelectedItem()) + ' --risk=' + str(self._jComboRisk.getSelectedItem()) + textonly + hpp + ' --threads=' + str(self._jComboThreads.getSelectedItem()) + ' -b' + cu + cdb + hostname + isdba + lusers + lpswds + lprivs + lroles + ldbs + ' --batch --answers="crack=N,dict=N"\n'
       sqlmapcmd = 'sqlmap.py -u "' + self._jTextFieldURL.getText()  +  '"' + datacmd + cookiecmd + uacmd + referercmd + proxycmd + ' --delay=' + str(self._jComboDelay.getSelectedItem()) + ' --timeout=' + str(self._jComboTimeout.getSelectedItem()) + ' --retries=' + str(self._jComboDelay.getSelectedItem()) + paramcmd + dbmscmd + oscmd + tampercmd + ' --level=' + str(self._jComboLevel.getSelectedItem()) + ' --risk=' + str(self._jComboRisk.getSelectedItem()) + textonly + hpp + ' --threads=' + str(self._jComboThreads.getSelectedItem()) + ' -b' + cu + cdb + hostname + isdba + lusers + lpswds + lprivs + lroles + ldbs + ' --batch --answers="crack=N,dict=N"\n\n'
+      print 'SQLMap Command: ' + sqlmapcmd
       req = urllib2.Request('http://' + self._jTextFieldScanIPListen.getText() + ':' + self._jTextFieldScanPortListen.getText() + '/task/new')
       resp = json.load(urllib2.urlopen(req))
 
