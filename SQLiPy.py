@@ -1,7 +1,7 @@
 """
 Name:           SQLiPy
 Version:        0.3.2
-Date:           9/3/2015
+Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
 
