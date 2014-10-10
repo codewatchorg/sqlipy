@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.3.4
+Version:        0.3.5
 Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -659,11 +659,32 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jLogPanel.add(self._jButtonGetLogs)
     self._jLogPanel.add(self._jScrollPaneLogs)
 
+    # Create SQLMap stop scan JPanel
+    self._jStopScanPanel = swing.JPanel()
+    self._jStopScanPanel.setLayout(None)
+
+    # Create label, combobox, and button to stop scans and textfield to display success
+    self._jLabelStopScan = swing.JLabel("Stop Scan ID:")
+    self._jComboStopScan = swing.JComboBox(self.scantasks)
+    self._jButtonStopScan = swing.JButton('Stop Scan', actionPerformed=self.stopScan)
+    self._jLabelStopStatus = swing.JLabel()
+
+    self._jLabelStopScan.setBounds(15, 16, 126, 20)
+    self._jComboStopScan.setBounds(167, 16, 535, 20)
+    self._jButtonStopScan.setBounds(743, 16, 103, 20)
+    self._jLabelStopStatus.setBounds(167, 58, 846, 20)
+
+    self._jStopScanPanel.add(self._jLabelStopScan)
+    self._jStopScanPanel.add(self._jComboStopScan)
+    self._jStopScanPanel.add(self._jButtonStopScan)
+    self._jStopScanPanel.add(self._jLabelStopStatus)
+
     # Setup Tabs
     self._jConfigTab = swing.JTabbedPane()
     self._jConfigTab.addTab("SQLMap API", self._jPanel)
     self._jConfigTab.addTab("SQLMap Scanner", self._jScrollPaneMain)
     self._jConfigTab.addTab("SQLMap Logs", self._jLogPanel)
+    self._jConfigTab.addTab("SQLMap Scan Stop", self._jStopScanPanel)
 
     callbacks.customizeUiComponent(self._jConfigTab)
     callbacks.addSuiteTab(self)
@@ -766,6 +787,22 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
         print 'Failed to get logs for: '+self._jComboLogs.getSelectedItem().split('-')[0]+'\n'
     except:
       print 'Failed to get logs for: '+self._jComboLogs.getSelectedItem().split('-')[0]+'\n'
+
+  def stopScan(self, button):
+    try:
+      req = urllib2.Request('http://' + self._jTextFieldScanIPListen.getText() + ':' + self._jTextFieldScanPortListen.getText() + '/scan/' + self._jComboStopScan.getSelectedItem().split('-')[0] + '/kill')
+      resp = json.load(urllib2.urlopen(req))
+
+      if resp['success'] == True:
+        print 'Scan stopped for ID: '+ self._jComboStopScan.getSelectedItem().split('-')[0]+'\n'
+        self._jLabelStopStatus.setText('Scan stopped for ID: ' + self._jComboStopScan.getSelectedItem().split('-')[0])
+        self._jComboStopScan.removeItem(self._jComboStopScan.getSelectedItem())
+      else:
+        print 'Failed to stop scan on ID: '+self._jComboStopScan.getSelectedItem().split('-')[0]+'\n'
+        self._jLabelStopStatus.setText('Failed to stop scan on ID: '+self._jComboStopScan.getSelectedItem().split('-')[0])
+    except:
+      print 'Failed to stop scan on ID: '+self._jComboStopScan.getSelectedItem().split('-')[0]+'\n'
+      self._jLabelStopStatus.setText('Failed to stop scan on ID: '+self._jComboStopScan.getSelectedItem().split('-')[0])
 
   def startAPI(self, button):
     try:
@@ -962,6 +999,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
                 self.threads.append(t)
                 t.start()
                 self._jComboLogs.addItem(sqlitask + '-' + self._jTextFieldURL.getText())
+                self._jComboStopScan.addItem(sqlitask + '-' + self._jTextFieldURL.getText())
                 self.scancmds[sqlitask] = sqlmapcmd
                 print 'Started SQLMap Scan on Task ' + sqlitask +' with Engine ID: ' + str(resp['engineid']) + ' - ' + self._jTextFieldURL.getText() + '\n'
               else:
