@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.3.3
+Version:        0.3.4
 Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -317,7 +317,6 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
 class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
   pythonfile = ''
   apifile = ''
-  tamperfile = ''
   threads = []
   scanMessage = ''
   scantasks = []
@@ -465,10 +464,10 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jTextFieldProxy = swing.JTextField()
     self._jSeparator8 = swing.JSeparator()
     self._jLabelTamper = swing.JLabel()
-    self._jButtonSetTamper = swing.JButton('Tamper', actionPerformed=self.setTamper)
-    self._jButtonClearTamper = swing.JButton('Clear', actionPerformed=self.clearTamper)
+    self._jTextFieldTamper = swing.JTextField()
     self._jButtonStartScan = swing.JButton('Start Scan', actionPerformed=self.startScan)
     self._jLabelScanAPI = swing.JLabel()
+    self._jSeparator9 = swing.JSeparator()
 
     # Configure GUI
     self._jLabelScanText.setText('API Listening On:')
@@ -502,7 +501,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jLabelDBMS.setText('DBMS Backend:')
     self._jLabelOS.setText('Operating System:')
     self._jLabelProxy.setText('Proxy (HTTP://IP:Port):')
-    self._jLabelTamper.setText('Tamper Script:')
+    self._jLabelTamper.setText('Tamper Scripts:')
 
     # Configure locations
     self._jLabelScanText.setBounds(15, 16, 126, 20)
@@ -561,16 +560,16 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jLabelProxy.setBounds(15, 844, 171, 20)
     self._jTextFieldProxy.setBounds(204, 841, 256, 26)
     self._jSeparator8.setBounds(15, 887, 790, 10)
-    self._jLabelTamper.setBounds(482, 844, 106, 20)
-    self._jButtonSetTamper.setBounds(606, 840, 87, 29)
-    self._jButtonClearTamper.setBounds(721, 840, 67, 29)
-    self._jButtonStartScan.setBounds(346, 905, 103, 29)
+    self._jLabelTamper.setBounds(15, 911, 171, 20)
+    self._jTextFieldTamper.setBounds(204, 908, 256, 26)
+    self._jSeparator9.setBounds(15, 954, 790, 10)
+    self._jButtonStartScan.setBounds(346, 972, 103, 29)
     self._jLabelScanAPI.setBounds(167, 16, 200, 20)
 
     # Create main panel
     self._jScanPanel = swing.JPanel()
     self._jScanPanel.setLayout(None)
-    self._jScanPanel.setPreferredSize(awt.Dimension(1000,1000))
+    self._jScanPanel.setPreferredSize(awt.Dimension(1010,1010))
     self._jScanPanel.add(self._jLabelScanText)
     self._jScanPanel.add(self._jLabelScanIPListen)
     self._jScanPanel.add(self._jLabelScanPortListen)
@@ -626,8 +625,8 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jScanPanel.add(self._jTextFieldProxy)
     self._jScanPanel.add(self._jSeparator8)
     self._jScanPanel.add(self._jLabelTamper)
-    self._jScanPanel.add(self._jButtonSetTamper)
-    self._jScanPanel.add(self._jButtonClearTamper)
+    self._jScanPanel.add(self._jTextFieldTamper)
+    self._jScanPanel.add(self._jSeparator9)
     self._jScanPanel.add(self._jButtonStartScan)
     self._jScanPanel.add(self._jLabelScanAPI)
     self._jScrollPaneMain = swing.JScrollPane(self._jScanPanel)
@@ -752,28 +751,6 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
       print 'Selected Python at ' + file.getPath()
       self._jLabelPython.setText('Python set to: ' + file.getPath())
 
-  def setTamper(self, e):
-    selectFile = swing.JFileChooser()
-    selectFile.setMultiSelectionEnabled(True)
-    filter = swing.filechooser.FileNameExtensionFilter("python files", ["py"])
-    selectFile.addChoosableFileFilter(filter)
-
-    returnedFile = selectFile.showDialog(self._jPanel, "Tamper")
-
-    if returnedFile == swing.JFileChooser.APPROVE_OPTION:
-      files = selectFile.getSelectedFiles()
-      tampers = ''
-
-      for file in files:
-        tampers = tampers + file.getPath().rsplit('\\', 1)[1] + ','
-
-      self.tamperfile = tampers[0:-1]
-      self._jLabelTamper.setText(tampers[0:-1])
-
-  def clearTamper(self, e):
-    self._jLabelTamper.setText('Tamper Script:')
-    self.tamperfile = ''
-
   def getLogs(self, button):
     try:
       req = urllib2.Request('http://' + self._jTextFieldScanIPListen.getText() + ':' + self._jTextFieldScanPortListen.getText() + '/scan/' + self._jComboLogs.getSelectedItem().split('-')[0] + '/log')
@@ -786,9 +763,9 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
 
         self._jTextLogs.setText('Log results for: ' + self.scancmds[self._jComboLogs.getSelectedItem().split('-')[0]] + logdata)
       else:
-        print 'Failed to get logs for '+self._jComboLogs.getSelectedItem()+'\n'
+        print 'Failed to get logs for: '+self._jComboLogs.getSelectedItem().split('-')[0]+'\n'
     except:
-      print 'Failed to get logs for '+self._jComboLogs.getSelectedItem()+'\n'
+      print 'Failed to get logs for: '+self._jComboLogs.getSelectedItem().split('-')[0]+'\n'
 
   def startAPI(self, button):
     try:
@@ -916,15 +893,15 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
 
     if not re.search('^Any$', self._jComboDBMS.getSelectedItem()) is not None:
       dbms = self._jComboDBMS.getSelectedItem()
-      dbmscmd = ' --dbms=' + self._jComboDBMS.getSelectedItem()
+      dbmscmd = ' --dbms="' + self._jComboDBMS.getSelectedItem()+'"'
 
     if not re.search('^Any$', self._jComboOS.getSelectedItem()) is not None:
       os = self._jComboOS.getSelectedItem()
       oscmd = ' --os=' + self._jComboOS.getSelectedItem()
 
-    if re.search('[a-zA-Z0-9]', self.tamperfile) is not None:
-      tampercmd = ' --tamper="' + self.tamperfile + '"'
-      tamperdata = self.tamperfile
+    if re.search('[a-zA-Z0-9]', self._jTextFieldTamper.getText()) is not None:
+      tampercmd = ' --tamper="' + self._jTextFieldTamper.getText() + '"'
+      tamperdata = self._jTextFieldTamper.getText()
 
     if re.search('[a-zA-Z0-9]', self._jTextData.getText()) is not None:
       postdata = self._jTextData.getText()
