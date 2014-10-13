@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.3.5
+Version:        0.3.6
 Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -138,7 +138,10 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
                 vulnerable = True
                 # Get basic scan info
                 if findings['type'] == 0:
-                  dbtype = findings['value'][0]['dbms']
+                  for dbtypes in findings['value'][0]['dbms']:
+                    dbtype = dbtype + dbtypes + ', or '
+
+                  dbtype = dbtype[:-5]
 
                   for items in findings['value']:
                     firstpayload = True
