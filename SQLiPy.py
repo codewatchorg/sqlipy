@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.3.7
+Version:        0.3.8
 Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -412,6 +412,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     retryValues = [1,2,3,4,5,6,7,8,9,10]
     dbmsValues = ['Any', 'MySQL', 'Oracle', 'PostgreSQL', 'Microsoft SQL Server', 'Microsoft Access', 'SQLite', 'Firebird', 'Sybase', 'SAP MaxDB', 'DB2']
     osValues = ['Any', 'Linux', 'Windows']
+    timeSecValues = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
 
     # GUI components
     self._jLabelScanText = swing.JLabel()
@@ -456,10 +457,12 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jLabelDelay = swing.JLabel()
     self._jLabelTimeout = swing.JLabel()
     self._jLabelRetry = swing.JLabel()
+    self._jLabelTimeSec = swing.JLabel()
     self._jComboThreads = swing.JComboBox(threadValues)
     self._jComboDelay = swing.JComboBox(delayValues)
     self._jComboTimeout = swing.JComboBox(timeoutValues)
     self._jComboRetry = swing.JComboBox(retryValues)
+    self._jComboTimeSec = swing.JComboBox(timeSecValues)
     self._jSeparator6 = swing.JSeparator()
     self._jLabelDBMS = swing.JLabel()
     self._jComboDBMS = swing.JComboBox(dbmsValues)
@@ -498,12 +501,14 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jComboDelay.setSelectedIndex(0)
     self._jComboTimeout.setSelectedIndex(6)
     self._jComboRetry.setSelectedIndex(2)
+    self._jComboTimeSec.setSelectedIndex(4)
     self._jComboDBMS.setSelectedIndex(0)
     self._jComboOS.setSelectedIndex(0)
     self._jLabelThreads.setText('Threads:')
     self._jLabelDelay.setText('Delay:')
     self._jLabelTimeout.setText('Timeout:')
-    self._jLabelRetry.setText('Retries')
+    self._jLabelRetry.setText('Retries:')
+    self._jLabelTimeSec.setText('Time-Sec:')
     self._jLabelDBMS.setText('DBMS Backend:')
     self._jLabelOS.setText('Operating System:')
     self._jLabelProxy.setText('Proxy (HTTP://IP:Port):')
@@ -550,13 +555,15 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jCheckDBs.setBounds(599, 655, 89, 29)
     self._jSeparator5.setBounds(15, 696, 790, 10)
     self._jLabelThreads.setBounds(15, 719, 63, 20)
-    self._jLabelDelay.setBounds(193, 719, 45, 20)
-    self._jLabelTimeout.setBounds(346, 719, 65, 20)
-    self._jLabelRetry.setBounds(522, 719, 48, 20)
-    self._jComboThreads.setBounds(100, 716, 78, 26)
-    self._jComboDelay.setBounds(253, 716, 78, 26)
-    self._jComboTimeout.setBounds(429, 716, 78, 26)
-    self._jComboRetry.setBounds(585, 716, 78, 26)
+    self._jLabelDelay.setBounds(173, 719, 45, 20)
+    self._jLabelTimeout.setBounds(326, 719, 65, 20)
+    self._jLabelRetry.setBounds(484, 719, 48, 20)
+    self._jLabelTimeSec.setBounds(642, 719, 65, 20)
+    self._jComboThreads.setBounds(80, 716, 78, 26)
+    self._jComboDelay.setBounds(233, 716, 78, 26)
+    self._jComboTimeout.setBounds(391, 716, 78, 26)
+    self._jComboRetry.setBounds(549, 716, 78, 26)
+    self._jComboTimeSec.setBounds(717, 716, 78, 26)
     self._jSeparator6.setBounds(15, 758, 790, 10)
     self._jLabelDBMS.setBounds(15, 781, 110, 20)
     self._jComboDBMS.setBounds(143, 778, 191, 26)
@@ -617,10 +624,12 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jScanPanel.add(self._jLabelDelay)
     self._jScanPanel.add(self._jLabelTimeout)
     self._jScanPanel.add(self._jLabelRetry)
+    self._jScanPanel.add(self._jLabelTimeSec)
     self._jScanPanel.add(self._jComboThreads)
     self._jScanPanel.add(self._jComboDelay)
     self._jScanPanel.add(self._jComboTimeout)
     self._jScanPanel.add(self._jComboRetry)
+    self._jScanPanel.add(self._jComboTimeSec)
     self._jScanPanel.add(self._jSeparator6)
     self._jScanPanel.add(self._jLabelDBMS)
     self._jScanPanel.add(self._jComboDBMS)
@@ -646,7 +655,8 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     # Create label, combobox, and button to get logs and textarea to display them
     self._jLabelLog = swing.JLabel("Logs for Scan ID:")
     self._jComboLogs = swing.JComboBox(self.scantasks)
-    self._jButtonGetLogs = swing.JButton('Get Logs', actionPerformed=self.getLogs)
+    self._jButtonGetLogs = swing.JButton('Get', actionPerformed=self.getLogs)
+    self._jButtonRemoveLogs = swing.JButton('Remove', actionPerformed=self.removeLogs)
     self._jTextLogs = swing.JTextArea()
     self._jTextLogs.setColumns(50)
     self._jTextLogs.setRows(50)
@@ -657,12 +667,14 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
 
     self._jLabelLog.setBounds(15, 16, 126, 20)
     self._jComboLogs.setBounds(167, 16, 535, 20)
-    self._jButtonGetLogs.setBounds(743, 16, 103, 20)
+    self._jButtonGetLogs.setBounds(718, 16, 50, 20)
+    self._jButtonRemoveLogs.setBounds(783, 16, 80, 20)
     self._jScrollPaneLogs.setBounds(15, 58, 846, 400)
 
     self._jLogPanel.add(self._jLabelLog)
     self._jLogPanel.add(self._jComboLogs)
     self._jLogPanel.add(self._jButtonGetLogs)
+    self._jLogPanel.add(self._jButtonRemoveLogs)
     self._jLogPanel.add(self._jScrollPaneLogs)
 
     # Create SQLMap stop scan JPanel
@@ -672,17 +684,20 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     # Create label, combobox, and button to stop scans and textfield to display success
     self._jLabelStopScan = swing.JLabel("Stop Scan ID:")
     self._jComboStopScan = swing.JComboBox(self.scantasks)
-    self._jButtonStopScan = swing.JButton('Stop Scan', actionPerformed=self.stopScan)
+    self._jButtonStopScan = swing.JButton('Stop', actionPerformed=self.stopScan)
+    self._jButtonRemoveScan = swing.JButton('Remove', actionPerformed=self.removeScan)
     self._jLabelStopStatus = swing.JLabel()
 
     self._jLabelStopScan.setBounds(15, 16, 126, 20)
     self._jComboStopScan.setBounds(167, 16, 535, 20)
-    self._jButtonStopScan.setBounds(743, 16, 103, 20)
+    self._jButtonStopScan.setBounds(718, 16, 55, 20)
+    self._jButtonRemoveScan.setBounds(783, 16, 80, 20)
     self._jLabelStopStatus.setBounds(167, 58, 846, 20)
 
     self._jStopScanPanel.add(self._jLabelStopScan)
     self._jStopScanPanel.add(self._jComboStopScan)
     self._jStopScanPanel.add(self._jButtonStopScan)
+    self._jStopScanPanel.add(self._jButtonRemoveScan)
     self._jStopScanPanel.add(self._jLabelStopStatus)
 
     # Setup Tabs
@@ -794,6 +809,10 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     except:
       print 'Failed to get logs for: '+self._jComboLogs.getSelectedItem().split('-')[0]+'\n'
 
+  def removeLogs(self, button):
+    print 'Removing Log Entry for ID: '+ self._jComboLogs.getSelectedItem().split('-')[0]+'\n'
+    self._jComboLogs.removeItem(self._jComboLogs.getSelectedItem())
+
   def stopScan(self, button):
     try:
       req = urllib2.Request('http://' + self._jTextFieldScanIPListen.getText() + ':' + self._jTextFieldScanPortListen.getText() + '/scan/' + self._jComboStopScan.getSelectedItem().split('-')[0] + '/kill')
@@ -809,6 +828,11 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     except:
       print 'Failed to stop scan on ID: '+self._jComboStopScan.getSelectedItem().split('-')[0]+'\n'
       self._jLabelStopStatus.setText('Failed to stop scan on ID: '+self._jComboStopScan.getSelectedItem().split('-')[0])
+
+  def removeScan(self, button):
+    print 'Removing Scan Stop Entry for ID: '+ self._jComboStopScan.getSelectedItem().split('-')[0]+'\n'
+    self._jLabelStopStatus.setText('Scan removed from stop tab for ID: ' + self._jComboStopScan.getSelectedItem().split('-')[0])
+    self._jComboStopScan.removeItem(self._jComboStopScan.getSelectedItem())
 
   def startAPI(self, button):
     try:
@@ -863,6 +887,8 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     tamperdata = None
     paramcmd = ''
     paramdata = None
+    csrfurl = None
+    csrftoken = None
 
     if self._jCheckTO.isSelected():
       textonly = ' --text-only'
@@ -967,14 +993,14 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
       paramcmd = ' -p "' + self._jTextFieldParam.getText() + '"'
 
     try:
-      sqlmapcmd = 'sqlmap.py -u "' + self._jTextFieldURL.getText()  +  '"' + datacmd + cookiecmd + uacmd + referercmd + proxycmd + ' --delay=' + str(self._jComboDelay.getSelectedItem()) + ' --timeout=' + str(self._jComboTimeout.getSelectedItem()) + ' --retries=' + str(self._jComboDelay.getSelectedItem()) + paramcmd + dbmscmd + oscmd + tampercmd + ' --level=' + str(self._jComboLevel.getSelectedItem()) + ' --risk=' + str(self._jComboRisk.getSelectedItem()) + textonly + hpp + ' --threads=' + str(self._jComboThreads.getSelectedItem()) + ' -b' + cu + cdb + hostname + isdba + lusers + lpswds + lprivs + lroles + ldbs + ' --batch --answers="crack=N,dict=N"\n\n'
+      sqlmapcmd = 'sqlmap.py -u "' + self._jTextFieldURL.getText()  +  '"' + datacmd + cookiecmd + uacmd + referercmd + proxycmd + ' --delay=' + str(self._jComboDelay.getSelectedItem()) + ' --timeout=' + str(self._jComboTimeout.getSelectedItem()) + ' --retries=' + str(self._jComboDelay.getSelectedItem()) + paramcmd + dbmscmd + oscmd + tampercmd + ' --level=' + str(self._jComboLevel.getSelectedItem()) + ' --risk=' + str(self._jComboRisk.getSelectedItem()) + textonly + hpp + ' --threads=' + str(self._jComboThreads.getSelectedItem()) + ' --time-sec=' + str(self._jComboTimeSec.getSelectedItem()) + ' -b' + cu + cdb + hostname + isdba + lusers + lpswds + lprivs + lroles + ldbs + ' --batch --answers="crack=N,dict=N"\n\n'
       print 'SQLMap Command: ' + sqlmapcmd
       req = urllib2.Request('http://' + self._jTextFieldScanIPListen.getText() + ':' + self._jTextFieldScanPortListen.getText() + '/task/new')
       resp = json.load(urllib2.urlopen(req))
 
       if resp['success'] == True:
         sqlitask = resp['taskid']
-        sqliopts = {'getUsers': lusersstatus, 'getPasswordHashes': lpswdsstatus, 'delay': self._jComboDelay.getSelectedItem(), 'isDba': isdbastatus, 'risk': self._jComboRisk.getSelectedItem(), 'getCurrentUser': custatus, 'getRoles': lrolesstatus, 'getPrivileges': lprivsstatus, 'testParameter': paramdata, 'timeout': self._jComboTimeout.getSelectedItem(), 'level': self._jComboLevel.getSelectedItem(), 'getCurrentDb': cdbstatus, 'answers': 'crack=N,dict=N', 'cookie': cookiedata, 'proxy': proxy, 'os': os, 'threads': self._jComboThreads.getSelectedItem(), 'url': self._jTextFieldURL.getText(), 'getDbs': ldbsstatus, 'referer': refererdata, 'retries': self._jComboRetry.getSelectedItem(), 'getHostname': hostnamestatus, 'agent': uadata, 'dbms': dbms, 'tamper': tamperdata, 'hpp': hppstatus, 'getBanner': 'true', 'data': postdata, 'textOnly': textonlystatus}
+        sqliopts = {'csrfUrl': csrfurl, 'csrfToken': csrftoken, 'getUsers': lusersstatus, 'getPasswordHashes': lpswdsstatus, 'delay': self._jComboDelay.getSelectedItem(), 'isDba': isdbastatus, 'risk': self._jComboRisk.getSelectedItem(), 'getCurrentUser': custatus, 'getRoles': lrolesstatus, 'getPrivileges': lprivsstatus, 'testParameter': paramdata, 'timeout': self._jComboTimeout.getSelectedItem(), 'level': self._jComboLevel.getSelectedItem(), 'getCurrentDb': cdbstatus, 'answers': 'crack=N,dict=N', 'cookie': cookiedata, 'proxy': proxy, 'os': os, 'threads': self._jComboThreads.getSelectedItem(), 'url': self._jTextFieldURL.getText(), 'getDbs': ldbsstatus, 'referer': refererdata, 'retries': self._jComboRetry.getSelectedItem(), 'timeSec': self._jComboTimeSec.getSelectedItem(), 'getHostname': hostnamestatus, 'agent': uadata, 'dbms': dbms, 'tamper': tamperdata, 'hpp': hppstatus, 'getBanner': 'true', 'data': postdata, 'textOnly': textonlystatus}
 
         print 'Created SQLMap Task: ' + sqlitask + '\n'
 
