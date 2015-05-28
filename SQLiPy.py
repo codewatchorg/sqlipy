@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.3.8
+Version:        0.3.9
 Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -577,7 +577,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jTextFieldTamper.setBounds(204, 908, 256, 26)
     self._jSeparator9.setBounds(15, 954, 790, 10)
     self._jButtonStartScan.setBounds(346, 972, 103, 29)
-    self._jLabelScanAPI.setBounds(167, 16, 200, 20)
+    self._jLabelScanAPI.setBounds(167, 16, 275, 20)
 
     # Create main panel
     self._jScanPanel = swing.JPanel()
@@ -767,7 +767,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
         print 'Failed to add data to scan tab.'
 
   def printHeader(self):
-    print 'SQLiPy\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
+    print 'SQLiPy - 0.3.9\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
 
   def setAPI(self, e):
     selectFile = swing.JFileChooser()
@@ -844,8 +844,8 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
       else:
         sqlmapdir = self.apifile.rsplit('/', 1)[0]
 
-      self.sqlmapapi = subprocess.Popen(self.pythonfile + ' ' + self.apifile + ' -s -H ' + self._jTextFieldIPListen.getText() + ' -p ' + self._jTextFieldPortListen.getText(), cwd=sqlmapdir, stdout=subprocess.PIPE)
-      self._jLabelScanAPI.setText('API Listening on: ' + self._jTextFieldIPListen.getText() + ':' + self._jTextFieldPortListen.getText())
+      self.sqlmapapi = subprocess.Popen(self.pythonfile + ' ' + self.apifile + ' -s -H ' + self._jTextFieldIPListen.getText() + ' -p ' + self._jTextFieldPortListen.getText(), cwd=sqlmapdir, stdout=subprocess.PIPE, shell=True)
+      self._jLabelScanAPI.setText(self._jTextFieldIPListen.getText() + ':' + self._jTextFieldPortListen.getText())
       self._jTextFieldScanIPListen.setText(self._jTextFieldIPListen.getText())
       self._jTextFieldScanPortListen.setText(self._jTextFieldPortListen.getText())
       for x in range(0, 4):
