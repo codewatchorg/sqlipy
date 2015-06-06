@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.3.9
+Version:        0.4.0
 Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -295,9 +295,19 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
                     ldbs = 'Databases:<ul>' + ldbs + '</ul><BR>'
 
               if vulnerable:
-                scanIssue = SqlMapScanIssue(self.httpmessage.getHttpService(), self.url, [self.httpmessage], 'SQLMap Scan Finding',
-                    'The application has been found to be vulnerable to SQL injection by SQLMap.  The following payloads successfully identified SQL injection vulnerabilities:<p>'+payloads+'</p><p>Enumerated Data:</p><BR><p>'+dbtype+': '+banner+'</p><p>'+cu+'</p><p>'+cdb+'</p><p>'+hostname+'</p><p>'+isdba+'</p><p>'+lusers+'</p><p>'+lpswds+'</p><p>'+lprivs+'</p><p>'+lroles+'</p><p>'+ldbs+'</p>', 'Certain', 'High')
-                self.cbacks.addScanIssue(scanIssue)
+                if re.search('Free', self.cbacks.getBurpVersion()[0], re.IGNORECASE) is not None:
+                  findings = open(self.sqlmaptask + '.html', 'w')
+                  findings.write('<html><head><title>SQLMap Scan - ' + self.sqlmaptask + '</title></head><body>')
+                  findings.write('<h1>SQLMap Scan Finding</h1><br><p>The application has been found to be vulnerable to SQL injection by SQLMap.</p><br>')
+                  findings.write('<p>The following payloads successfully identified SQL injection vulnerabilities:</p><p>'+payloads+'</p><p>Enumerated Data:</p><BR><p>'+dbtype+': '+banner+'</p><p>'+cu+'</p><p>'+cdb+'</p><p>'+hostname+'</p><p>'+isdba+'</p><p>'+lusers+'</p><p>'+lpswds+'</p><p>'+lprivs+'</p><p>'+lroles+'</p><p>'+ldbs+'</p>')
+                  findings.write('</body></html>')
+                  findings.close()
+                  print 'Wrote scan file ' + self.sqlmaptask + '.html\n'
+                else:
+                  scanIssue = SqlMapScanIssue(self.httpmessage.getHttpService(), self.url, [self.httpmessage], 'SQLMap Scan Finding',
+                      'The application has been found to be vulnerable to SQL injection by SQLMap.  The following payloads successfully identified SQL injection vulnerabilities:<p>'+payloads+'</p><p>Enumerated Data:</p><BR><p>'+dbtype+': '+banner+'</p><p>'+cu+'</p><p>'+cdb+'</p><p>'+hostname+'</p><p>'+isdba+'</p><p>'+lusers+'</p><p>'+lpswds+'</p><p>'+lprivs+'</p><p>'+lroles+'</p><p>'+ldbs+'</p>', 'Certain', 'High')
+                  self.cbacks.addScanIssue(scanIssue)
+
                 print 'SQLi vulnerabilities were found for task '+self.sqlmaptask+' and have been reported.\n'
               else:
                 print 'Scan completed for task '+self.sqlmaptask+' but SQLi vulnerabilities were not found.\n'
@@ -767,7 +777,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
         print 'Failed to add data to scan tab.'
 
   def printHeader(self):
-    print 'SQLiPy - 0.3.9\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
+    print 'SQLiPy - 0.4.0\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
 
   def setAPI(self, e):
     selectFile = swing.JFileChooser()
