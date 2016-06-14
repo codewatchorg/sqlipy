@@ -614,7 +614,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     # Create main panel
     self._jScanPanel = swing.JPanel()
     self._jScanPanel.setLayout(None)
-    self._jScanPanel.setPreferredSize(awt.Dimension(1010,1010))
+    self._jScanPanel.setPreferredSize(awt.Dimension(1010,1085))
     self._jScanPanel.add(self._jLabelScanText)
     self._jScanPanel.add(self._jLabelScanIPListen)
     self._jScanPanel.add(self._jLabelScanPortListen)
