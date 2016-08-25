@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.5.0
+Version:        0.5.1
 Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -614,7 +614,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     # Create main panel
     self._jScanPanel = swing.JPanel()
     self._jScanPanel.setLayout(None)
-    self._jScanPanel.setPreferredSize(awt.Dimension(1010,1085))
+    self._jScanPanel.setPreferredSize(awt.Dimension(1200,1200))
     self._jScanPanel.add(self._jLabelScanText)
     self._jScanPanel.add(self._jLabelScanIPListen)
     self._jScanPanel.add(self._jLabelScanPortListen)
@@ -686,7 +686,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jScanPanel.add(self._jLabelScanAPI)
     self._jScrollPaneMain = swing.JScrollPane(self._jScanPanel)
     self._jScrollPaneMain.setViewportView(self._jScanPanel)
-    self._jScrollPaneMain.setPreferredSize(awt.Dimension(999,999))
+    self._jScrollPaneMain.setPreferredSize(awt.Dimension(1189,1189))
 
     # Create SQLMap log JPanel
     self._jLogPanel = swing.JPanel()
