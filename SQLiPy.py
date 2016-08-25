@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.5.1
+Version:        0.5.2
 Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -414,6 +414,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
 
     # Create SQLMap scanner panel
     # Combobox Values
+    httpMethodValues = ['Default', 'GET', 'POST', 'PUT', 'DELETE', 'PATCH']
     levelValues = [1,2,3,4,5]
     riskValues = [0,1,2,3]
     threadValues = [1,2,3,4,5,6,7,8,9,10]
@@ -432,6 +433,8 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jTextFieldScanIPListen = swing.JTextField()
     self._jTextFieldScanPortListen = swing.JTextField()
     self._jSeparator1 = swing.JSeparator()
+    self._jLabelHttpMethod = swing.JLabel()
+    self._jComboHttpMethod = swing.JComboBox(httpMethodValues)
     self._jLabelURL = swing.JLabel()
     self._jTextFieldURL = swing.JTextField()
     self._jLabelData = swing.JLabel()
@@ -501,6 +504,8 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jLabelScanText.setText('API Listening On:')
     self._jLabelScanIPListen.setText('SQLMap API IP:')
     self._jLabelScanPortListen.setText('SQLMap API Port:')
+    self._jLabelHttpMethod.setText('HTTP Method:')
+    self._jComboHttpMethod.setSelectedIndex(0)
     self._jLabelURL.setText('URL:')
     self._jLabelData.setText('Post Data:')
     self._jTextData.setColumns(20)
@@ -545,70 +550,72 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jTextFieldScanIPListen.setBounds(167, 52, 206, 26)
     self._jTextFieldScanPortListen.setBounds(546, 52, 63, 26)
     self._jSeparator1.setBounds(15, 96, 790, 10)
-    self._jLabelURL.setBounds(15, 117, 35, 20)
-    self._jTextFieldURL.setBounds(166, 114, 535, 26)
-    self._jLabelData.setBounds(15, 156, 73, 20)
+    self._jLabelHttpMethod.setBounds(15, 117, 100, 26)
+    self._jComboHttpMethod.setBounds(166, 117, 150, 26)
+    self._jLabelURL.setBounds(15, 193, 35, 20)
+    self._jTextFieldURL.setBounds(166, 190, 535, 26)
+    self._jLabelData.setBounds(15, 232, 73, 20)
     self._jTextData.setColumns(20)
     self._jTextData.setRows(5)
-    self._jScrollPaneData.setBounds(166, 156, 535, 96)
-    self._jLabelCookie.setBounds(15, 271, 61, 20)
-    self._jTextFieldCookie.setBounds(166, 271, 535, 26)
-    self._jLabelReferer.setBounds(15, 320, 57, 20)
-    self._jTextFieldReferer.setBounds(166, 320, 535, 26)
-    self._jLabelUA.setBounds(15, 369, 86, 20)
-    self._jTextFieldUA.setBounds(166, 369, 535, 26)
-    self._jLabelCustHeader.setBounds(15, 418, 132, 20)
-    self._jTextFieldCustHeader.setBounds(166, 418, 535, 26)
-    self._jSeparator2.setBounds(15, 459, 790, 10)
-    self._jLabelParam.setBounds(15, 483, 132, 20)
-    self._jTextFieldParam.setBounds(165, 480, 366, 26)
-    self._jCheckTO.setBounds(584, 479, 101, 29)
-    self._jSeparator3.setBounds(15, 526, 790, 10)
-    self._jComboLevel.setBounds(165, 544, 180, 26)
-    self._jLabelLevel.setBounds(15, 547, 42, 20)
-    self._jLabelRisk.setBounds(430, 547, 35, 20)
-    self._jComboRisk.setBounds(518, 544, 180, 26)
-    self._jSeparator4.setBounds(15, 588, 790, 10)
-    self._jCheckHPP.setBounds(15, 608, 145, 29)
-    self._jCheckCU.setBounds(191, 608, 123, 29)
-    self._jCheckDB.setBounds(340, 608, 111, 29)
-    self._jCheckHost.setBounds(469, 608, 103, 29)
-    self._jCheckDBA.setBounds(599, 608, 105, 29)
-    self._jCheckUsers.setBounds(15, 655, 101, 29)
-    self._jCheckPswds.setBounds(191, 655, 135, 29)
-    self._jCheckPrivs.setBounds(344, 655, 95, 29)
-    self._jCheckRoles.setBounds(469, 655, 99, 29)
-    self._jCheckDBs.setBounds(599, 655, 89, 29)
-    self._jSeparator5.setBounds(15, 696, 790, 10)
-    self._jLabelThreads.setBounds(15, 719, 63, 20)
-    self._jLabelDelay.setBounds(173, 719, 45, 20)
-    self._jLabelTimeout.setBounds(326, 719, 65, 20)
-    self._jLabelRetry.setBounds(484, 719, 48, 20)
-    self._jLabelTimeSec.setBounds(642, 719, 65, 20)
-    self._jComboThreads.setBounds(80, 716, 78, 26)
-    self._jComboDelay.setBounds(233, 716, 78, 26)
-    self._jComboTimeout.setBounds(391, 716, 78, 26)
-    self._jComboRetry.setBounds(549, 716, 78, 26)
-    self._jComboTimeSec.setBounds(717, 716, 78, 26)
-    self._jSeparator6.setBounds(15, 758, 790, 10)
-    self._jLabelDBMS.setBounds(15, 781, 110, 20)
-    self._jComboDBMS.setBounds(143, 778, 191, 26)
-    self._jLabelOS.setBounds(352, 781, 132, 20)
-    self._jComboOS.setBounds(502, 778, 191, 26)
-    self._jSeparator7.setBounds(15, 820, 790, 10)
-    self._jLabelProxy.setBounds(15, 844, 171, 20)
-    self._jTextFieldProxy.setBounds(204, 841, 256, 26)
-    self._jSeparator8.setBounds(15, 887, 790, 10)
-    self._jCheckTor.setBounds(15, 911, 171, 20)
-    self._jLabelTorType.setBounds(206, 908, 65, 26)
-    self._jComboTorType.setBounds(291, 908, 100, 26)
-    self._jLabelTorPort.setBounds(460, 908, 129, 26)
-    self._jTextFieldTorPort.setBounds(545, 908, 65, 26)
-    self._jSeparator9.setBounds(15, 954, 790, 10)
-    self._jLabelTamper.setBounds(15, 979, 171, 20)
-    self._jTextFieldTamper.setBounds(204, 976, 256, 26)
-    self._jSeparator10.setBounds(15, 1024, 790, 10)
-    self._jButtonStartScan.setBounds(346, 1047, 103, 29)
+    self._jScrollPaneData.setBounds(166, 232, 535, 96)
+    self._jLabelCookie.setBounds(15, 347, 61, 20)
+    self._jTextFieldCookie.setBounds(166, 347, 535, 26)
+    self._jLabelReferer.setBounds(15, 396, 57, 20)
+    self._jTextFieldReferer.setBounds(166, 396, 535, 26)
+    self._jLabelUA.setBounds(15, 445, 86, 20)
+    self._jTextFieldUA.setBounds(166, 445, 535, 26)
+    self._jLabelCustHeader.setBounds(15, 494, 132, 20)
+    self._jTextFieldCustHeader.setBounds(166, 494, 535, 26)
+    self._jSeparator2.setBounds(15, 535, 790, 10)
+    self._jLabelParam.setBounds(15, 559, 132, 20)
+    self._jTextFieldParam.setBounds(165, 556, 366, 26)
+    self._jCheckTO.setBounds(584, 555, 101, 29)
+    self._jSeparator3.setBounds(15, 602, 790, 10)
+    self._jComboLevel.setBounds(165, 620, 180, 26)
+    self._jLabelLevel.setBounds(15, 623, 42, 20)
+    self._jLabelRisk.setBounds(430, 623, 35, 20)
+    self._jComboRisk.setBounds(518, 620, 180, 26)
+    self._jSeparator4.setBounds(15, 664, 790, 10)
+    self._jCheckHPP.setBounds(15, 684, 145, 29)
+    self._jCheckCU.setBounds(191, 684, 123, 29)
+    self._jCheckDB.setBounds(340, 684, 111, 29)
+    self._jCheckHost.setBounds(469, 684, 103, 29)
+    self._jCheckDBA.setBounds(599, 684, 105, 29)
+    self._jCheckUsers.setBounds(15, 731, 101, 29)
+    self._jCheckPswds.setBounds(191, 731, 135, 29)
+    self._jCheckPrivs.setBounds(344, 731, 95, 29)
+    self._jCheckRoles.setBounds(469, 731, 99, 29)
+    self._jCheckDBs.setBounds(599, 731, 89, 29)
+    self._jSeparator5.setBounds(15, 772, 790, 10)
+    self._jLabelThreads.setBounds(15, 795, 63, 20)
+    self._jLabelDelay.setBounds(173, 795, 45, 20)
+    self._jLabelTimeout.setBounds(326, 795, 65, 20)
+    self._jLabelRetry.setBounds(484, 795, 48, 20)
+    self._jLabelTimeSec.setBounds(642, 795, 65, 20)
+    self._jComboThreads.setBounds(80, 792, 78, 26)
+    self._jComboDelay.setBounds(233, 792, 78, 26)
+    self._jComboTimeout.setBounds(391, 792, 78, 26)
+    self._jComboRetry.setBounds(549, 792, 78, 26)
+    self._jComboTimeSec.setBounds(717, 792, 78, 26)
+    self._jSeparator6.setBounds(15, 834, 790, 10)
+    self._jLabelDBMS.setBounds(15, 857, 110, 20)
+    self._jComboDBMS.setBounds(143, 854, 191, 26)
+    self._jLabelOS.setBounds(352, 857, 132, 20)
+    self._jComboOS.setBounds(502, 854, 191, 26)
+    self._jSeparator7.setBounds(15, 896, 790, 10)
+    self._jLabelProxy.setBounds(15, 920, 171, 20)
+    self._jTextFieldProxy.setBounds(204, 917, 256, 26)
+    self._jSeparator8.setBounds(15, 963, 790, 10)
+    self._jCheckTor.setBounds(15, 987, 171, 20)
+    self._jLabelTorType.setBounds(206, 984, 65, 26)
+    self._jComboTorType.setBounds(291, 984, 100, 26)
+    self._jLabelTorPort.setBounds(460, 984, 129, 26)
+    self._jTextFieldTorPort.setBounds(545, 984, 65, 26)
+    self._jSeparator9.setBounds(15, 1030, 790, 10)
+    self._jLabelTamper.setBounds(15, 1055, 171, 20)
+    self._jTextFieldTamper.setBounds(204, 1052, 256, 26)
+    self._jSeparator10.setBounds(15, 1098, 790, 10)
+    self._jButtonStartScan.setBounds(346, 1123, 103, 29)
     self._jLabelScanAPI.setBounds(167, 16, 275, 20)
 
     # Create main panel
@@ -629,6 +636,8 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jScanPanel.add(self._jTextFieldCookie)
     self._jScanPanel.add(self._jLabelReferer)
     self._jScanPanel.add(self._jTextFieldReferer)
+    self._jScanPanel.add(self._jLabelHttpMethod)
+    self._jScanPanel.add(self._jComboHttpMethod)
     self._jScanPanel.add(self._jLabelUA)
     self._jScanPanel.add(self._jTextFieldUA)
     self._jScanPanel.add(self._jLabelCustHeader)
@@ -807,7 +816,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
         print 'Failed to add data to scan tab.'
 
   def printHeader(self):
-    print 'SQLiPy - 0.5.1\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
+    print 'SQLiPy - 0.5.2\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
 
   def setAPI(self, e):
     selectFile = swing.JFileChooser()
@@ -934,6 +943,8 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     torcmd = ''
     tortypecmd = ''
     torportcmd = ''
+    httpmethod = None
+    httpmethodcmd = ''
 
     if self._jCheckTO.isSelected():
       textonly = ' --text-only'
@@ -1017,6 +1028,10 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
       proxy = self._jTextFieldProxy.getText()
       proxycmd = ' --proxy=' + self._jTextFieldProxy.getText()
 
+    if not re.search('^Default$', self._jComboHttpMethod.getSelectedItem()) is not None:
+      httpmethod = self._jComboHttpMethod.getSelectedItem()
+      httpmethodcmd = ' --method="' + self._jComboHttpMethod.getSelectedItem()+'"'
+
     if not re.search('^Any$', self._jComboDBMS.getSelectedItem()) is not None:
       dbms = self._jComboDBMS.getSelectedItem()
       dbmscmd = ' --dbms="' + self._jComboDBMS.getSelectedItem()+'"'
@@ -1054,14 +1069,14 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
       paramcmd = ' -p "' + self._jTextFieldParam.getText() + '"'
 
     try:
-      sqlmapcmd = 'sqlmap.py -u "' + self._jTextFieldURL.getText()  +  '"' + datacmd + cookiecmd + uacmd + referercmd + custheadercmd + proxycmd + torcmd + tortypecmd + torportcmd + ' --delay=' + str(self._jComboDelay.getSelectedItem()) + ' --timeout=' + str(self._jComboTimeout.getSelectedItem()) + ' --retries=' + str(self._jComboDelay.getSelectedItem()) + paramcmd + dbmscmd + oscmd + tampercmd + ' --level=' + str(self._jComboLevel.getSelectedItem()) + ' --risk=' + str(self._jComboRisk.getSelectedItem()) + textonly + hpp + ' --threads=' + str(self._jComboThreads.getSelectedItem()) + ' --time-sec=' + str(self._jComboTimeSec.getSelectedItem()) + ' -b' + cu + cdb + hostname + isdba + lusers + lpswds + lprivs + lroles + ldbs + ' --batch --answers="crack=N,dict=N"\n\n'
+      sqlmapcmd = 'sqlmap.py -u "' + self._jTextFieldURL.getText() + '"' + datacmd + httpmethodcmd + cookiecmd + uacmd + referercmd + custheadercmd + proxycmd + torcmd + tortypecmd + torportcmd + ' --delay=' + str(self._jComboDelay.getSelectedItem()) + ' --timeout=' + str(self._jComboTimeout.getSelectedItem()) + ' --retries=' + str(self._jComboDelay.getSelectedItem()) + paramcmd + dbmscmd + oscmd + tampercmd + ' --level=' + str(self._jComboLevel.getSelectedItem()) + ' --risk=' + str(self._jComboRisk.getSelectedItem()) + textonly + hpp + ' --threads=' + str(self._jComboThreads.getSelectedItem()) + ' --time-sec=' + str(self._jComboTimeSec.getSelectedItem()) + ' -b' + cu + cdb + hostname + isdba + lusers + lpswds + lprivs + lroles + ldbs + ' --batch --answers="crack=N,dict=N"\n\n'
       print 'SQLMap Command: ' + sqlmapcmd
       req = urllib2.Request('http://' + self._jTextFieldScanIPListen.getText() + ':' + self._jTextFieldScanPortListen.getText() + '/task/new')
       resp = json.load(urllib2.urlopen(req))
 
       if resp['success'] == True and resp['taskid']:
         sqlitask = resp['taskid']
-        sqliopts = {'csrfUrl': csrfurl, 'csrfToken': csrftoken, 'getUsers': lusersstatus, 'getPasswordHashes': lpswdsstatus, 'delay': self._jComboDelay.getSelectedItem(), 'isDba': isdbastatus, 'risk': self._jComboRisk.getSelectedItem(), 'getCurrentUser': custatus, 'getRoles': lrolesstatus, 'getPrivileges': lprivsstatus, 'testParameter': paramdata, 'timeout': self._jComboTimeout.getSelectedItem(), 'torPort': torport, 'level': self._jComboLevel.getSelectedItem(), 'getCurrentDb': cdbstatus, 'answers': 'crack=N,dict=N', 'cookie': cookiedata, 'proxy': proxy, 'os': os, 'threads': self._jComboThreads.getSelectedItem(), 'url': self._jTextFieldURL.getText(), 'getDbs': ldbsstatus, 'tor': torstatus, 'torType': tortype, 'referer': refererdata, 'retries': self._jComboRetry.getSelectedItem(), 'headers': custheaderdata, 'timeSec': self._jComboTimeSec.getSelectedItem(), 'getHostname': hostnamestatus, 'agent': uadata, 'dbms': dbms, 'tamper': tamperdata, 'hpp': hppstatus, 'getBanner': 'true', 'data': postdata, 'textOnly': textonlystatus}
+        sqliopts = {'csrfUrl': csrfurl, 'csrfToken': csrftoken, 'getUsers': lusersstatus, 'getPasswordHashes': lpswdsstatus, 'delay': self._jComboDelay.getSelectedItem(), 'isDba': isdbastatus, 'risk': self._jComboRisk.getSelectedItem(), 'getCurrentUser': custatus, 'getRoles': lrolesstatus, 'getPrivileges': lprivsstatus, 'testParameter': paramdata, 'timeout': self._jComboTimeout.getSelectedItem(), 'torPort': torport, 'level': self._jComboLevel.getSelectedItem(), 'getCurrentDb': cdbstatus, 'answers': 'crack=N,dict=N', 'method': httpmethod, 'cookie': cookiedata, 'proxy': proxy, 'os': os, 'threads': self._jComboThreads.getSelectedItem(), 'url': self._jTextFieldURL.getText(), 'getDbs': ldbsstatus, 'tor': torstatus, 'torType': tortype, 'referer': refererdata, 'retries': self._jComboRetry.getSelectedItem(), 'headers': custheaderdata, 'timeSec': self._jComboTimeSec.getSelectedItem(), 'getHostname': hostnamestatus, 'agent': uadata, 'dbms': dbms, 'tamper': tamperdata, 'hpp': hppstatus, 'getBanner': 'true', 'data': postdata, 'textOnly': textonlystatus}
 
         print 'Created SQLMap Task: ' + sqlitask + '\n'
 
