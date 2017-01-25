@@ -4,7 +4,7 @@ Name: SQLiPy
 ScreenVersion: 0.5.2
 SerialVersion: 8
 MinPlatformVersion: 0
-ProOnly: True
+ProOnly: False
 Author: Josh Berry @ CodeWatch
 ShortDescription: Initiates SQLMap scans directly from within Burp.
 EntryPoint: SQLiPy.py
