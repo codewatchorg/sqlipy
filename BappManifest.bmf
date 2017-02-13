@@ -1,6 +1,7 @@
 Uuid: f154175126a04bfe8edc6056f340f52e
 ExtensionType: 2
 Name: SQLiPy
+RepoName: sqli-py
 ScreenVersion: 0.5.2
 SerialVersion: 8
 MinPlatformVersion: 0
