@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.5.2
+Version:        0.5.3
 Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -347,71 +347,6 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._helpers = callbacks.getHelpers()
     callbacks.registerContextMenuFactory(self)
 
-    # Create SQLMap API configuration JPanel
-    self._jPanel = swing.JPanel()
-    self._jPanel.setLayout(awt.GridBagLayout())
-    self._jPanelConstraints = awt.GridBagConstraints()
-
-    # Create panel for IP info
-    self._jLabelIPListen = swing.JLabel("Listen on IP:")
-    self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
-    self._jPanelConstraints.gridx = 0
-    self._jPanelConstraints.gridy = 0
-    self._jPanel.add(self._jLabelIPListen, self._jPanelConstraints)
-
-    self._jTextFieldIPListen = swing.JTextField("",15)
-    self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
-    self._jPanelConstraints.gridx = 1
-    self._jPanelConstraints.gridy = 0
-    self._jPanel.add(self._jTextFieldIPListen, self._jPanelConstraints)
-
-    # Create panel for Port info
-    self._jLabelPortListen = swing.JLabel("Listen on Port:")
-    self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
-    self._jPanelConstraints.gridx = 0
-    self._jPanelConstraints.gridy = 1
-    self._jPanel.add(self._jLabelPortListen, self._jPanelConstraints)
-
-    self._jTextFieldPortListen = swing.JTextField("",3)
-    self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
-    self._jPanelConstraints.gridx = 1
-    self._jPanelConstraints.gridy = 1
-    self._jPanel.add(self._jTextFieldPortListen, self._jPanelConstraints)
-
-    # Create panel to contain Python button
-    self._jLabelPython = swing.JLabel("Select Python:")
-    self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
-    self._jPanelConstraints.gridx = 0
-    self._jPanelConstraints.gridy = 2
-    self._jPanel.add(self._jLabelPython, self._jPanelConstraints)
-
-    self._jButtonSetPython = swing.JButton('Python', actionPerformed=self.setPython)
-    self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
-    self._jPanelConstraints.gridx = 1
-    self._jPanelConstraints.gridy = 2
-    self._jPanel.add(self._jButtonSetPython, self._jPanelConstraints)
-
-    # Create panel to contain API button
-    self._jLabelAPI = swing.JLabel("Select API:")
-    self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
-    self._jPanelConstraints.gridx = 0
-    self._jPanelConstraints.gridy = 3
-    self._jPanel.add(self._jLabelAPI, self._jPanelConstraints)
-
-    self._jButtonSetAPI = swing.JButton('SQLMap API', actionPerformed=self.setAPI)
-    self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
-    self._jPanelConstraints.gridx = 1
-    self._jPanelConstraints.gridy = 3
-    self._jPanel.add(self._jButtonSetAPI, self._jPanelConstraints)
-
-    # Create panel to execute API
-    self._jButtonStartAPI = swing.JButton('Start API', actionPerformed=self.startAPI)
-    self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
-    self._jPanelConstraints.gridx = 0
-    self._jPanelConstraints.gridy = 4
-    self._jPanelConstraints.gridwidth = 2
-    self._jPanel.add(self._jButtonStartAPI, self._jPanelConstraints)
-
     # Create SQLMap scanner panel
     # Combobox Values
     httpMethodValues = ['Default', 'GET', 'POST', 'PUT', 'DELETE', 'PATCH']
@@ -427,7 +362,6 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     torTypes = ['HTTP', 'SOCKS4', 'SOCKS5']
 
     # GUI components
-    self._jLabelScanText = swing.JLabel()
     self._jLabelScanIPListen = swing.JLabel()
     self._jLabelScanPortListen = swing.JLabel()
     self._jTextFieldScanIPListen = swing.JTextField()
@@ -501,7 +435,6 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jTextFieldTorPort = swing.JTextField()
 
     # Configure GUI
-    self._jLabelScanText.setText('API Listening On:')
     self._jLabelScanIPListen.setText('SQLMap API IP:')
     self._jLabelScanPortListen.setText('SQLMap API Port:')
     self._jLabelHttpMethod.setText('HTTP Method:')
@@ -544,7 +477,6 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jTextFieldTorPort.setText('9050')
 
     # Configure locations
-    self._jLabelScanText.setBounds(15, 16, 126, 20)
     self._jLabelScanIPListen.setBounds(15, 58, 115, 20)
     self._jLabelScanPortListen.setBounds(402, 55, 129, 20)
     self._jTextFieldScanIPListen.setBounds(167, 52, 206, 26)
@@ -622,7 +554,6 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jScanPanel = swing.JPanel()
     self._jScanPanel.setLayout(None)
     self._jScanPanel.setPreferredSize(awt.Dimension(1200,1200))
-    self._jScanPanel.add(self._jLabelScanText)
     self._jScanPanel.add(self._jLabelScanIPListen)
     self._jScanPanel.add(self._jLabelScanPortListen)
     self._jScanPanel.add(self._jTextFieldScanIPListen)
@@ -751,7 +682,6 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
 
     # Setup Tabs
     self._jConfigTab = swing.JTabbedPane()
-    self._jConfigTab.addTab("SQLMap API", self._jPanel)
     self._jConfigTab.addTab("SQLMap Scanner", self._jScrollPaneMain)
     self._jConfigTab.addTab("SQLMap Logs", self._jLogPanel)
     self._jConfigTab.addTab("SQLMap Scan Stop", self._jStopScanPanel)
@@ -816,31 +746,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
         print 'Failed to add data to scan tab.'
 
   def printHeader(self):
-    print 'SQLiPy - 0.5.2\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
-
-  def setAPI(self, e):
-    selectFile = swing.JFileChooser()
-    filter = swing.filechooser.FileNameExtensionFilter("python files", ["py"])
-    selectFile.addChoosableFileFilter(filter)
-
-    returnedFile = selectFile.showDialog(self._jPanel, "SQLMap API")
-
-    if returnedFile == swing.JFileChooser.APPROVE_OPTION:
-      file = selectFile.getSelectedFile()
-      self.apifile = file.getPath()
-      print 'Selected API at ' + file.getPath()
-      self._jLabelAPI.setText('API set to: ' + file.getPath())
-
-  def setPython(self, e):
-    selectFile = swing.JFileChooser()
-
-    returnedFile = selectFile.showDialog(self._jPanel, "Python EXE")
-
-    if returnedFile == swing.JFileChooser.APPROVE_OPTION:
-      file = selectFile.getSelectedFile()
-      self.pythonfile = file.getPath()
-      print 'Selected Python at ' + file.getPath()
-      self._jLabelPython.setText('Python set to: ' + file.getPath())
+    print 'SQLiPy - 0.5.3\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
 
   def getLogs(self, button):
     try:
@@ -882,27 +788,6 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     print 'Removing Scan Stop Entry for ID: '+ self._jComboStopScan.getSelectedItem().split('-')[0]+'\n'
     self._jLabelStopStatus.setText('Scan removed from stop tab for ID: ' + self._jComboStopScan.getSelectedItem().split('-')[0])
     self._jComboStopScan.removeItem(self._jComboStopScan.getSelectedItem())
-
-  def startAPI(self, button):
-    try:
-      print 'Calling: ' + self.pythonfile + ' ' + self.apifile + ' -s -H ' + self._jTextFieldIPListen.getText() + ' -p ' + self._jTextFieldPortListen.getText() + '\n'
-      sqlmapdir = ''
-
-      if re.search('^[a-zA-Z]\:', self.apifile) is not None:
-        sqlmapdir = self.apifile.rsplit('\\', 1)[0]
-      else:
-        sqlmapdir = self.apifile.rsplit('/', 1)[0]
-
-      self.sqlmapapi = subprocess.Popen(self.pythonfile + ' ' + self.apifile + ' -s -H ' + self._jTextFieldIPListen.getText() + ' -p ' + self._jTextFieldPortListen.getText(), cwd=sqlmapdir, stdout=subprocess.PIPE, shell=True)
-      self._jLabelScanAPI.setText(self._jTextFieldIPListen.getText() + ':' + self._jTextFieldPortListen.getText())
-      self._jTextFieldScanIPListen.setText(self._jTextFieldIPListen.getText())
-      self._jTextFieldScanPortListen.setText(self._jTextFieldPortListen.getText())
-      for x in range(0, 4):
-        print self.sqlmapapi.stdout.readline().rstrip()
-
-      print '\n'
-    except:
-      print 'Failed to start the SQLMap API\n'
 
   def startScan(self, button):
     hpp = ''
