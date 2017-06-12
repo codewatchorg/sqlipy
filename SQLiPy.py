@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.5.3
+Version:        0.5.4
 Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -441,8 +441,6 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jComboHttpMethod.setSelectedIndex(0)
     self._jLabelURL.setText('URL:')
     self._jLabelData.setText('Post Data:')
-    self._jTextData.setColumns(20)
-    self._jTextData.setRows(5)
     self._jTextData.setLineWrap(True)
     self._jScrollPaneData.setVerticalScrollBarPolicy(swing.JScrollPane.VERTICAL_SCROLLBAR_ALWAYS)
     self._jLabelCookie.setText('Cookies:')
