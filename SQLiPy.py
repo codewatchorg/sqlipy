@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.5.3
+Version:        0.5.4
 Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -441,8 +441,6 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jComboHttpMethod.setSelectedIndex(0)
     self._jLabelURL.setText('URL:')
     self._jLabelData.setText('Post Data:')
-    self._jTextData.setColumns(20)
-    self._jTextData.setRows(5)
     self._jTextData.setLineWrap(True)
     self._jScrollPaneData.setVerticalScrollBarPolicy(swing.JScrollPane.VERTICAL_SCROLLBAR_ALWAYS)
     self._jLabelCookie.setText('Cookies:')
@@ -487,8 +485,6 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     self._jLabelURL.setBounds(15, 193, 35, 20)
     self._jTextFieldURL.setBounds(166, 190, 535, 26)
     self._jLabelData.setBounds(15, 232, 73, 20)
-    self._jTextData.setColumns(20)
-    self._jTextData.setRows(5)
     self._jScrollPaneData.setBounds(166, 232, 535, 96)
     self._jLabelCookie.setBounds(15, 347, 61, 20)
     self._jTextFieldCookie.setBounds(166, 347, 535, 26)
@@ -746,7 +742,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
         print 'Failed to add data to scan tab.'
 
   def printHeader(self):
-    print 'SQLiPy - 0.5.3\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
+    print 'SQLiPy - 0.5.4\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
 
   def getLogs(self, button):
     try:
