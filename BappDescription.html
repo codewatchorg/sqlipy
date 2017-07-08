@@ -1,0 +1,23 @@
+<p>This extension integrates Burp Suite with SQLMap.</p>
+
+<p>Requirements:</p>
+<ul>
+	<li>Jython 2.7 beta, due to the use of json.</li>
+    <li>Java 1.7 or 1.8 (the beta version of Jython 2.7 requires this).</li>
+	<li>A running instance of the SQLMap API server.</li>
+</ul>
+<p>SQLMap comes with a RESTful based server that will execute SQLMap scans. You can manually start the server 
+with: </p>
+<pre> python sqlmapapi.py -s -H &lt;ip&gt; -p &lt;port&gt;
+</pre>
+<p>Alternatively, you can use the SQLMap API tab to select the IP/Port on which to run, as well as the path to python and sqlmapapi.py on your system.
+
+</p>
+<p>Once the SQLMap API is running, you just need to right-click in the 'Request' 
+sub tab of either the Target or Proxy main tabs and choose 'SQLiPy Scan' from 
+the context menu.
+
+This will populate the SQLMap Scanner tab with information about that request.  Clicking the 'Start Scan' button will execute a scan.
+
+If the page is vulnerable to SQL injection, then these will be added to the Scanner Results tab.
+</p>
