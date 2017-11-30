@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.5.4
+Version:        0.5.5
 Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -115,6 +115,8 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
         elif resp['status'] == "terminated":
           if resp['returncode'] == 0:
             print 'Scan for task '+self.sqlmaptask+' completed.  Gathering results.\n'
+            vulnurl = ''
+            vulnparam = ''
             dbtype = ''
             payloads = ''
             banner = ''
@@ -136,8 +138,15 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
 
               for findings in resp['data']:
                 vulnerable = True
-                # Get basic scan info
+
+                # Get vulnerable URL and param
                 if findings['type'] == 0:
+                  vulnurl = findings['value']['url']
+                  vulnparam = findings['value']['query']
+                  vulndetails = '<ul><li>URL: '+vulnurl+'</li><li>Parameter: '+vulnparam+'</li></ul>'
+
+                # Get basic scan info
+                if findings['type'] == 1:
                   if isinstance(findings['value'][0]['dbms'], list):
                     for dbtypes in findings['value'][0]['dbms']:
                       dbtype = dbtype + dbtypes + ', or '
@@ -159,30 +168,30 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
                       payloads = '<ul>' + payloads + '</ul><BR>'
 
                 # Get banner info
-                if findings['type'] == 2:
+                if findings['type'] == 3:
                   banner = findings['value']+'<BR>'
 
                 # Get Current Users
-                elif findings['type'] == 3:
+                elif findings['type'] == 4:
                   cu = 'Current User: '+findings['value']+'<BR>'
 
                 # Get Current Database
-                elif findings['type'] == 4:
+                elif findings['type'] == 5:
                   cdb = 'Current Database: '+findings['value']+'<BR>'
 
                 # Get Hostname
-                elif findings['type'] == 5:
+                elif findings['type'] == 6:
                   hostname = 'Hostname: '+findings['value']+'<BR>'
 
                 # Is the user a DBA?
-                elif findings['type'] == 6:
+                elif findings['type'] == 7:
                   if findings['value'] == True:
                     isdba = 'Is a DBA: Yes'+'<BR>'
                   else:
                     isdba = 'Is a DBA: No'+'<BR>'
 
                 # Get list of users
-                elif findings['type'] == 7:
+                elif findings['type'] == 8:
                   firstuser = True
                   for user in findings['value']:
                     if firstuser:
@@ -195,7 +204,7 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
                     lusers = 'Users:<ul>' + lusers + '</ul><BR>'
 
                 # Get list of passwords
-                elif findings['type'] == 8:
+                elif findings['type'] == 9:
                   userdata = ''
                   userpswds = ''
                   firstuser = True
@@ -224,7 +233,7 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
                     lpswds = 'Password Hashes per User:<ul>'+lpswds+'</ul><BR>'
 
                 # Get list of privileges
-                elif findings['type'] == 9:
+                elif findings['type'] == 10:
                   userdata = ''
                   userprivs = ''
                   firstuser = True
@@ -253,7 +262,7 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
                     lprivs = 'Privileges per User:<ul>'+lprivs+'</ul><BR>'
 
                 # Get list of roles
-                elif findings['type'] == 10:
+                elif findings['type'] == 11:
                   userdata = ''
                   userroles = ''
                   firstuser = True
@@ -282,7 +291,7 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
                     lroles = 'Roles per User:<ul>'+lroles+'</ul><BR>'
 
                 # Get list of DBs
-                elif findings['type'] == 11:
+                elif findings['type'] == 12:
                   firstdb = True
                   for db in findings['value']:
                     if firstdb:
@@ -299,13 +308,14 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
                   findings = open(self.sqlmaptask + '.html', 'w')
                   findings.write('<html><head><title>SQLMap Scan - ' + self.sqlmaptask + '</title></head><body>')
                   findings.write('<h1>SQLMap Scan Finding</h1><br><p>The application has been found to be vulnerable to SQL injection by SQLMap.</p><br>')
+                  findings.write('<p>Vulnerable URL and Parameter:</p><p>'+vulndetails+'</p>')
                   findings.write('<p>The following payloads successfully identified SQL injection vulnerabilities:</p><p>'+payloads+'</p><p>Enumerated Data:</p><BR><p>'+dbtype+': '+banner+'</p><p>'+cu+'</p><p>'+cdb+'</p><p>'+hostname+'</p><p>'+isdba+'</p><p>'+lusers+'</p><p>'+lpswds+'</p><p>'+lprivs+'</p><p>'+lroles+'</p><p>'+ldbs+'</p>')
                   findings.write('</body></html>')
                   findings.close()
                   print 'Wrote scan file ' + self.sqlmaptask + '.html\n'
                 else:
                   scanIssue = SqlMapScanIssue(self.httpmessage.getHttpService(), self.url, [self.httpmessage], 'SQLMap Scan Finding',
-                      'The application has been found to be vulnerable to SQL injection by SQLMap.  The following payloads successfully identified SQL injection vulnerabilities:<p>'+payloads+'</p><p>Enumerated Data:</p><BR><p>'+dbtype+': '+banner+'</p><p>'+cu+'</p><p>'+cdb+'</p><p>'+hostname+'</p><p>'+isdba+'</p><p>'+lusers+'</p><p>'+lpswds+'</p><p>'+lprivs+'</p><p>'+lroles+'</p><p>'+ldbs+'</p>', 'Certain', 'High')
+                      'The application has been found to be vulnerable to SQL injection by SQLMap.  <BR><BR>Vulnerable URL and Parameter:<p>'+vulndetails+'</p><BR>The following payloads successfully identified SQL injection vulnerabilities:<p>'+payloads+'</p><p>Enumerated Data:</p><BR><p>'+dbtype+': '+banner+'</p><p>'+cu+'</p><p>'+cdb+'</p><p>'+hostname+'</p><p>'+isdba+'</p><p>'+lusers+'</p><p>'+lpswds+'</p><p>'+lprivs+'</p><p>'+lroles+'</p><p>'+ldbs+'</p>', 'Certain', 'High')
                   self.cbacks.addScanIssue(scanIssue)
 
                 print 'SQLi vulnerabilities were found for task '+self.sqlmaptask+' and have been reported.\n'
@@ -742,7 +752,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
         print 'Failed to add data to scan tab.'
 
   def printHeader(self):
-    print 'SQLiPy - 0.5.4\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
+    print 'SQLiPy - 0.5.5\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
 
   def getLogs(self, button):
     try:
