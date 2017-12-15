@@ -2,8 +2,8 @@ Uuid: f154175126a04bfe8edc6056f340f52e
 ExtensionType: 2
 Name: SQLiPy
 RepoName: sqli-py
-ScreenVersion: 0.5.3
-SerialVersion: 10
+ScreenVersion: 0.5.5
+SerialVersion: 11
 MinPlatformVersion: 0
 ProOnly: False
 Author: Josh Berry @ CodeWatch
