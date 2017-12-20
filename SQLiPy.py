@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.6.0
+Version:        0.6.1
 Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -32,6 +32,7 @@ from burp import ITab
 from burp import IMessageEditorTab
 from burp import IScannerCheck
 from burp import IScanIssue
+from burp import IExtensionStateListener
 from javax import swing
 from javax.swing.filechooser import FileNameExtensionFilter
 from java.awt import GridBagLayout
@@ -103,10 +104,12 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
     self.cbacks = cbacks
 
   def checkResults(self):
-    time.sleep(30)
+    t = threading.currentThread()
+    time.sleep(5)
     print 'Checking results on task: '+self.sqlmaptask+'\n'
 
-    while True:
+    while getattr(t, "keep_running", True):
+
       try:
         req = urllib2.Request('http://' + self.sqlmapip + ':' + self.sqlmapport + '/scan/' + self.sqlmaptask + '/status')
         req.add_header('Content-Type', 'application/json')
@@ -343,7 +346,7 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
         print 'Thread failed to get results for SQLMap task: ' + self.sqlmaptask+'\n'
         break
 
-class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
+class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateListener):
   pythonfile = ''
   apifile = ''
   apiprocess = Process
@@ -358,6 +361,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
     # Print information about the plugin, set extension name, setup basic stuff
     self.printHeader()
     callbacks.setExtensionName("SQLiPy")
+    callbacks.registerExtensionStateListener(self)
     self._callbacks = callbacks
     self._helpers = callbacks.getHelpers()
     callbacks.registerContextMenuFactory(self)
@@ -835,7 +839,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
         print 'Failed to add data to scan tab.'
 
   def printHeader(self):
-    print 'SQLiPy - 0.6.0\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
+    print 'SQLiPy - 0.6.1\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
 
   def setAPI(self, e):
     selectFile = swing.JFileChooser()
@@ -888,15 +892,81 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab):
       print 'The SQLMap API process has already been started\n'
 
   def stopAPI(self, button):
-    try:
-      self.apiprocess.destroy()
-      self._jComboLogs.removeAllItems()
-      self._jComboStopScan.removeAllItems()
-      self.apistatus = 0
+    if self.apistatus == 1:
+      try:
+        if self._jComboStopScan.getItemCount() is not 0:
+          for item in range(0, self._jComboStopScan.getItemCount()):
+            req = urllib2.Request('http://' + self._jTextFieldScanIPListen.getText() + ':' + self._jTextFieldScanPortListen.getText() + '/scan/' + self._jComboStopScan.getItemAt(item).split('-')[0] + '/kill')
+            resp = json.load(urllib2.urlopen(req))
 
-      print 'Stopping the SQLMap API...\n'
-    except:
-      print 'Failed to stop the SQLMap API\n'
+            if resp['success'] == True:
+              print 'Scan stopped for ID: '+ self._jComboStopScan.getItemAt(item).split('-')[0]+'\n'
+            else:
+              print 'Failed to stop scan on ID: '+self._jComboStopScan.getItemAt(item).split('-')[0]+'\n'
+        
+      except:
+        print 'Failed to stop currently running SQLMap scans or no scans were still running\n'
+
+      try:
+        totalThreads = 1
+
+        for thread in self.threads:
+          print 'Stopping running scan check thread: ' + str(totalThreads) + '\n'
+          totalThreads += 1
+          thread.keep_running = False
+          thread.join()
+
+        i = 0
+        while i < len(self.threads):
+          self.threads.pop(0)
+          i += 1
+
+      except:
+        print 'Could not stop running threads\n'
+
+      try:
+        self.apiprocess.destroy()
+        self._jComboLogs.removeAllItems()
+        self._jComboStopScan.removeAllItems()
+        self.apistatus = 0
+
+        print 'Stopping the SQLMap API...\n'
+      except:
+        print 'Failed to stop the SQLMap API\n'
+
+  def extensionUnloaded(self):
+    if self.apistatus == 1:
+      try:
+        if self._jComboStopScan.getItemCount() is not 0:
+          for item in range(0, self._jComboStopScan.getItemCount()):
+            req = urllib2.Request('http://' + self._jTextFieldScanIPListen.getText() + ':' + self._jTextFieldScanPortListen.getText() + '/scan/' + self._jComboStopScan.getItemAt(item).split('-')[0] + '/kill')
+            resp = json.load(urllib2.urlopen(req))
+
+            if resp['success'] == True:
+              print 'Scan stopped for ID: '+ self._jComboStopScan.getItemAt(item).split('-')[0]+'\n'
+            else:
+              print 'Failed to stop scan on ID: '+self._jComboStopScan.getItemAt(item).split('-')[0]+'\n'
+        
+      except:
+        print 'Failed to stop currently running SQLMap scans or no scans were still running\n'
+
+      try:
+        totalThreads = 1
+
+        for thread in self.threads:
+          print 'Stopping running scan check thread: ' + str(totalThreads) + '\n'
+          totalThreads += 1
+          thread.keep_running = False
+          thread.join()
+
+      except:
+        print 'Could not stop running threads\n'
+
+      try:
+        self.apiprocess.destroy()
+        print 'Stopping the SQLMap API...\n'
+      except:
+        print 'Failed to stop the SQLMap API\n'
 
   def getLogs(self, button):
     try:
