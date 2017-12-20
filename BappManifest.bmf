@@ -1,0 +1,11 @@
+Uuid: f154175126a04bfe8edc6056f340f52e
+ExtensionType: 2
+Name: SQLiPy
+RepoName: sqli-py
+ScreenVersion: 0.5.5
+SerialVersion: 11
+MinPlatformVersion: 0
+ProOnly: False
+Author: Josh Berry @ CodeWatch
+ShortDescription: Initiates SQLMap scans directly from within Burp.
+EntryPoint: SQLiPy.py
