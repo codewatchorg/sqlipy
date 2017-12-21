@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.6.1
+Version:        0.6.2
 Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -47,6 +47,8 @@ import sys
 import json
 import threading
 import time
+import zipfile
+import os
 
 class SqlMapScanIssue(IScanIssue):
 
@@ -378,7 +380,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     self._jPanelConstraints.gridy = 0
     self._jPanel.add(self._jLabelIPListen, self._jPanelConstraints)
 
-    self._jTextFieldIPListen = swing.JTextField("",15)
+    self._jTextFieldIPListen = swing.JTextField("127.0.0.1",15)
     self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
     self._jPanelConstraints.gridx = 1
     self._jPanelConstraints.gridy = 0
@@ -391,7 +393,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     self._jPanelConstraints.gridy = 1
     self._jPanel.add(self._jLabelPortListen, self._jPanelConstraints)
 
-    self._jTextFieldPortListen = swing.JTextField("",3)
+    self._jTextFieldPortListen = swing.JTextField("9090",3)
     self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
     self._jPanelConstraints.gridx = 1
     self._jPanelConstraints.gridy = 1
@@ -779,6 +781,41 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     self._jConfigTab.addTab("SQLMap Logs", self._jLogPanel)
     self._jConfigTab.addTab("SQLMap Scan Stop", self._jStopScanPanel)
 
+    # Automatically get and set the Python path if we can find it
+    pythonpath = ''
+    path_delim = ''
+    if 'posix' in os.name:
+      pythonpath = subprocess.check_output(['which', 'python']).split('\n')[0].rstrip('\n\r')
+      path_delim = '/'
+    else:
+      pythonpath = subprocess.check_output(['where', 'python']).split('\n')[0].rstrip('\n\r')
+      path_delim = '\\'
+
+    # Set python variables
+    if re.search('python.exe', pythonpath):
+      self._jLabelPython.setText('Python set to: ' + pythonpath)
+      self.pythonfile = pythonpath
+
+    # Automatically set the sqlmapapi, first unzip if the extension has never run
+    if os.path.isfile(os.getcwd() + path_delim + 'sqlmap.zip'):
+
+      # Extract sqlmap
+      with zipfile.ZipFile(os.getcwd() + path_delim + 'sqlmap.zip') as sqlmapzip:
+        sqlmapzip.extractall(os.getcwd() + path_delim)
+
+      # Remove sqlmap zip file
+      os.remove(os.getcwd() + path_delim + 'sqlmap.zip')
+
+      # Set API
+      if os.path.isfile(os.getcwd() + path_delim + 'sqlmap' + path_delim + 'sqlmapapi.py'):
+        self._jLabelAPI.setText('API set to: ' + os.getcwd() + path_delim + 'sqlmap' + path_delim + 'sqlmapapi.py')
+        self.apifile = os.getcwd() + path_delim + 'sqlmap' + path_delim + 'sqlmapapi.py'
+    else:
+      # Set API
+      if os.path.isfile(os.getcwd() + path_delim + 'sqlmap' + path_delim + 'sqlmapapi.py'):
+        self._jLabelAPI.setText('API set to: ' + os.getcwd() + path_delim + 'sqlmap' + path_delim + 'sqlmapapi.py')
+        self.apifile = os.getcwd() + path_delim + 'sqlmap' + path_delim + 'sqlmapapi.py'
+
     callbacks.customizeUiComponent(self._jConfigTab)
     callbacks.addSuiteTab(self)
     return
@@ -839,7 +876,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
         print 'Failed to add data to scan tab.'
 
   def printHeader(self):
-    print 'SQLiPy - 0.6.1\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
+    print 'SQLiPy - 0.6.2\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
 
   def setAPI(self, e):
     selectFile = swing.JFileChooser()
