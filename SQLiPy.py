@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.6.3
+Version:        0.6.4
 Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -854,17 +854,22 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
 
     # Set python variables
     if re.search('python.exe', pythonpath):
-      self._jLabelPython.setText('Python set to: ' + pythonpath)
       self.pythonfile = pythonpath
       print 'Python found in system path at: ' + pythonpath + '\n'
     elif re.search('python.exe', pythonaltpath1):
-      self._jLabelPython.setText('Python set to: ' + pythonaltpath1)
       self.pythonfile = pythonaltpath1
       print 'Python found in registry under HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\2.7\\InstallPath at: ' + pythonaltpath1 + '\n'
     elif re.search('python.exe', pythonaltpath2):
-      self._jLabelPython.setText('Python set to: ' + pythonaltpath2)
       self.pythonfile = pythonaltpath2
       print 'Python found in registry under HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Python\\PythonCore\\2.7\InstallPath at: ' + pythonaltpath2 + '\n'
+
+    # Get Python version to confirm 2.7.x
+    pythonver = subprocess.check_output(self.pythonfile + ' -c "import sys; print str(sys.version_info[0]) + str(sys.version_info[1])"').rstrip('\n\r')
+    if pythonver == '27':
+      self._jLabelPython.setText('Python set to: ' + self.pythonfile)
+    else:
+      self.pythonfile = ''
+      print 'Wrong version of Python: ' + pythonver[0] + '.' + pythonver[1] + '\n'
 
     # Automatically set the sqlmapapi, first unzip if the extension has never run
     if os.path.isfile(os.getcwd() + path_delim + 'sqlmap.zip'):
@@ -952,7 +957,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
         print 'Failed to add data to scan tab.'
 
   def printHeader(self):
-    print 'SQLiPy - 0.6.3\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
+    print 'SQLiPy - 0.6.4\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
 
   def setAPI(self, e):
     selectFile = swing.JFileChooser()
