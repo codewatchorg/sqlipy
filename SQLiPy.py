@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.6.2
+Version:        0.6.3
 Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -36,10 +36,15 @@ from burp import IExtensionStateListener
 from javax import swing
 from javax.swing.filechooser import FileNameExtensionFilter
 from java.awt import GridBagLayout
+from java.awt import Font
+from java.awt import Color
 from java import awt
 from java.lang import Runtime
 from java.lang import Process
 from java.io import File
+from java.io import Reader
+from java.io import BufferedReader
+from java.io import InputStreamReader
 import subprocess
 import re
 import urllib2
@@ -373,63 +378,81 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     self._jPanel.setLayout(awt.GridBagLayout())
     self._jPanelConstraints = awt.GridBagConstraints()
 
+    # Create panel to show API status
+    self._jLabelAPIStatus = swing.JLabel("SQLMap API is NOT running!")
+    self._jLabelAPIStatus.setFont(Font("Courier New", Font.BOLD, 24))
+    self._jLabelAPIStatus.setForeground(Color.RED)
+    self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
+    self._jPanelConstraints.gridx = 0
+    self._jPanelConstraints.gridy = 0
+    self._jPanelConstraints.gridwidth = 2
+    self._jPanel.add(self._jLabelAPIStatus, self._jPanelConstraints)
+
     # Create panel for IP info
     self._jLabelIPListen = swing.JLabel("Listen on IP:")
     self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
     self._jPanelConstraints.gridx = 0
-    self._jPanelConstraints.gridy = 0
+    self._jPanelConstraints.gridy = 1
+    self._jPanelConstraints.gridwidth = 1
     self._jPanel.add(self._jLabelIPListen, self._jPanelConstraints)
 
     self._jTextFieldIPListen = swing.JTextField("127.0.0.1",15)
     self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
     self._jPanelConstraints.gridx = 1
-    self._jPanelConstraints.gridy = 0
+    self._jPanelConstraints.gridy = 1
+    self._jPanelConstraints.gridwidth = 1
     self._jPanel.add(self._jTextFieldIPListen, self._jPanelConstraints)
 
     # Create panel for Port info
     self._jLabelPortListen = swing.JLabel("Listen on Port:")
     self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
     self._jPanelConstraints.gridx = 0
-    self._jPanelConstraints.gridy = 1
+    self._jPanelConstraints.gridy = 2
+    self._jPanelConstraints.gridwidth = 1
     self._jPanel.add(self._jLabelPortListen, self._jPanelConstraints)
 
     self._jTextFieldPortListen = swing.JTextField("9090",3)
     self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
     self._jPanelConstraints.gridx = 1
-    self._jPanelConstraints.gridy = 1
+    self._jPanelConstraints.gridy = 2
+    self._jPanelConstraints.gridwidth = 1
     self._jPanel.add(self._jTextFieldPortListen, self._jPanelConstraints)
 
     # Create panel to contain Python button
     self._jLabelPython = swing.JLabel("Select Python:")
     self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
     self._jPanelConstraints.gridx = 0
-    self._jPanelConstraints.gridy = 2  
+    self._jPanelConstraints.gridy = 3
+    self._jPanelConstraints.gridwidth = 1
     self._jPanel.add(self._jLabelPython, self._jPanelConstraints)
 
     self._jButtonSetPython = swing.JButton('Python', actionPerformed=self.setPython)
     self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
     self._jPanelConstraints.gridx = 1
-    self._jPanelConstraints.gridy = 2  
+    self._jPanelConstraints.gridy = 3
+    self._jPanelConstraints.gridwidth = 1
     self._jPanel.add(self._jButtonSetPython, self._jPanelConstraints)
 
     # Create panel to contain API button
     self._jLabelAPI = swing.JLabel("Select API:")
     self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
     self._jPanelConstraints.gridx = 0
-    self._jPanelConstraints.gridy = 3
+    self._jPanelConstraints.gridy = 4
+    self._jPanelConstraints.gridwidth = 1
     self._jPanel.add(self._jLabelAPI, self._jPanelConstraints)
 
     self._jButtonSetAPI = swing.JButton('SQLMap API', actionPerformed=self.setAPI)
     self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
     self._jPanelConstraints.gridx = 1
-    self._jPanelConstraints.gridy = 3
+    self._jPanelConstraints.gridy = 4
+    self._jPanelConstraints.gridwidth = 1
     self._jPanel.add(self._jButtonSetAPI, self._jPanelConstraints)
 
     # Create panel to execute API
     self._jButtonStartAPI = swing.JButton('Start API', actionPerformed=self.startAPI)
     self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
     self._jPanelConstraints.gridx = 0
-    self._jPanelConstraints.gridy = 4
+    self._jPanelConstraints.gridy = 5
     self._jPanelConstraints.gridwidth = 2
     self._jPanel.add(self._jButtonStartAPI, self._jPanelConstraints)
 
@@ -437,7 +460,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     self._jButtonStopAPI = swing.JButton('Stop API', actionPerformed=self.stopAPI)
     self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
     self._jPanelConstraints.gridx = 0
-    self._jPanelConstraints.gridy = 5
+    self._jPanelConstraints.gridy = 6
     self._jPanelConstraints.gridwidth = 2
     self._jPanel.add(self._jButtonStopAPI, self._jPanelConstraints)
 
@@ -521,6 +544,8 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     self._jTextFieldTamper = swing.JTextField()
     self._jButtonStartScan = swing.JButton('Start Scan', actionPerformed=self.startScan)
     self._jLabelScanAPI = swing.JLabel()
+    self._jLabelScanAPI.setText('SQLMap API is NOT running!')
+    self._jLabelScanAPI.setForeground(Color.RED)
     self._jSeparator9 = swing.JSeparator()
     self._jSeparator10 = swing.JSeparator()
     self._jCheckTor = swing.JCheckBox('Enable Tor')
@@ -783,18 +808,63 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
 
     # Automatically get and set the Python path if we can find it
     pythonpath = ''
+    pythonregpath1 = ''
+    pythonregpath2 = ''
+    pathpart1 = ''
+    pathpart2 = ''
+    drivepart1 = ''
+    drivepart2 = ''
+    pythonaltpath1 = ''
+    pythonaltpath2 = ''
     path_delim = ''
     if 'posix' in os.name:
-      pythonpath = subprocess.check_output(['which', 'python']).split('\n')[0].rstrip('\n\r')
       path_delim = '/'
+
+      try:
+        pythonpath = subprocess.check_output(['which', 'python']).split('\n')[0].rstrip('\n\r')
+      except:
+        print 'Could not find python.exe in path.\n'
     else:
-      pythonpath = subprocess.check_output(['where', 'python']).split('\n')[0].rstrip('\n\r')
       path_delim = '\\'
+
+      try:
+        pythonpath = subprocess.check_output(['where', 'python']).split('\n')[0].rstrip('\n\r')
+      except:
+        print 'Could not find python.exe in path.\n'
+
+      try:
+        pythonregpath1 = subprocess.check_output('reg query "HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\2.7\\InstallPath" /ve')
+        pathpart1 = pythonregpath1.rsplit(':', 1)[1].rstrip('\n\r')
+        drivepart1 = pythonregpath1.rsplit(':', 1)[0][-1]
+      except:
+        print 'Could not find python path in registry at: HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\2.7\\InstallPath.\n'
+
+      try:
+        pythonregpath2 = subprocess.check_output('reg query "HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Python\\PythonCore\\2.7\InstallPath" /ve')
+        pathpart2 = pythonregpath2.rsplit(':', 1)[1].rstrip('\n\r')
+        drivepart2 = pythonregpath2.rsplit(':', 1)[0][-1]
+      except:
+        print 'Could not find python path in registry at: HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Python\\PythonCore\\2.7\InstallPath.\n'
+
+      if re.search('[pP]ython', pathpart1):
+        pythonaltpath1 = drivepart1 + ':' + pathpart1 + path_delim + 'python.exe'
+
+      if re.search('[pP]ython', pathpart2):
+        pythonaltpath2 = drivepart2 + ':' + pathpart2 + path_delim + 'python.exe'
 
     # Set python variables
     if re.search('python.exe', pythonpath):
       self._jLabelPython.setText('Python set to: ' + pythonpath)
       self.pythonfile = pythonpath
+      print 'Python found in system path at: ' + pythonpath + '\n'
+    elif re.search('python.exe', pythonaltpath1):
+      self._jLabelPython.setText('Python set to: ' + pythonaltpath1)
+      self.pythonfile = pythonaltpath1
+      print 'Python found in registry under HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\2.7\\InstallPath at: ' + pythonaltpath1 + '\n'
+    elif re.search('python.exe', pythonaltpath2):
+      self._jLabelPython.setText('Python set to: ' + pythonaltpath2)
+      self.pythonfile = pythonaltpath2
+      print 'Python found in registry under HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Python\\PythonCore\\2.7\InstallPath at: ' + pythonaltpath2 + '\n'
 
     # Automatically set the sqlmapapi, first unzip if the extension has never run
     if os.path.isfile(os.getcwd() + path_delim + 'sqlmap.zip'):
@@ -810,11 +880,17 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
       if os.path.isfile(os.getcwd() + path_delim + 'sqlmap' + path_delim + 'sqlmapapi.py'):
         self._jLabelAPI.setText('API set to: ' + os.getcwd() + path_delim + 'sqlmap' + path_delim + 'sqlmapapi.py')
         self.apifile = os.getcwd() + path_delim + 'sqlmap' + path_delim + 'sqlmapapi.py'
+        print 'SQLMap API found at: ' + self.apifile + '\n'
+      else:
+        print 'Could not find SQLMap API file.\n'
     else:
       # Set API
       if os.path.isfile(os.getcwd() + path_delim + 'sqlmap' + path_delim + 'sqlmapapi.py'):
         self._jLabelAPI.setText('API set to: ' + os.getcwd() + path_delim + 'sqlmap' + path_delim + 'sqlmapapi.py')
         self.apifile = os.getcwd() + path_delim + 'sqlmap' + path_delim + 'sqlmapapi.py'
+        print 'SQLMap API found at: ' + self.apifile + '\n'
+      else:
+        print 'Could not find SQLMap API file.\n'
 
     callbacks.customizeUiComponent(self._jConfigTab)
     callbacks.addSuiteTab(self)
@@ -876,7 +952,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
         print 'Failed to add data to scan tab.'
 
   def printHeader(self):
-    print 'SQLiPy - 0.6.2\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
+    print 'SQLiPy - 0.6.3\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
 
   def setAPI(self, e):
     selectFile = swing.JFileChooser()
@@ -917,12 +993,28 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
         cmd = [self.pythonfile, self.apifile, "-s", "-H", self._jTextFieldIPListen.getText(), "-p", self._jTextFieldPortListen.getText()]
 
         self.apiprocess = javaexec(cmd, None, File(sqlmapdir))
-        self._jLabelScanAPI.setText(self._jTextFieldIPListen.getText() + ':' + self._jTextFieldPortListen.getText())
-        self._jTextFieldScanIPListen.setText(self._jTextFieldIPListen.getText())
-        self._jTextFieldScanPortListen.setText(self._jTextFieldPortListen.getText())
-        self.apistatus = 1
 
-        print '\n'
+        # Final validation the API is running
+        try:
+          time.sleep(5)
+          req = urllib2.Request('http://' + self._jTextFieldIPListen.getText() + ':' + self._jTextFieldPortListen.getText() + '/scan/0/status')
+          req.add_header('Content-Type', 'application/json')
+          resp = json.load(urllib2.urlopen(req))
+
+          if resp['message'] == "Invalid task ID":
+            self._jLabelScanAPI.setText(self._jTextFieldIPListen.getText() + ':' + self._jTextFieldPortListen.getText())
+            self._jLabelScanAPI.setForeground(Color.GREEN)
+            self._jTextFieldScanIPListen.setText(self._jTextFieldIPListen.getText())
+            self._jTextFieldScanPortListen.setText(self._jTextFieldPortListen.getText())
+            self._jLabelAPIStatus.setText('SQLMap API IS CURRENTLY RUNNING!')
+            self._jLabelAPIStatus.setForeground(Color.GREEN)
+            self.apistatus = 1
+
+            print 'SQLMap API started.\n'
+        except:
+          self.apiprocess.destroy()
+          print 'Failed to start the SQLMap API\n'
+
       except:
         print 'Failed to start the SQLMap API\n'
     else:
@@ -965,9 +1057,13 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
         self.apiprocess.destroy()
         self._jComboLogs.removeAllItems()
         self._jComboStopScan.removeAllItems()
+        self._jLabelScanAPI.setText('SQLMap API is NOT running!')
+        self._jLabelScanAPI.setForeground(Color.RED)
+        self._jLabelAPIStatus.setText('SQLMap API is NOT running!')
+        self._jLabelAPIStatus.setForeground(Color.RED)
         self.apistatus = 0
 
-        print 'Stopping the SQLMap API...\n'
+        print 'Stopping the SQLMap API\n'
       except:
         print 'Failed to stop the SQLMap API\n'
 
