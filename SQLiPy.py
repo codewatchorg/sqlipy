@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.6.4
+Version:        0.6.5
 Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -41,6 +41,7 @@ from java.awt import Color
 from java import awt
 from java.lang import Runtime
 from java.lang import Process
+from java.lang import System
 from java.io import File
 from java.io import Reader
 from java.io import BufferedReader
@@ -817,43 +818,48 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     pythonaltpath1 = ''
     pythonaltpath2 = ''
     path_delim = ''
-    if 'posix' in os.name:
-      path_delim = '/'
+    ostype = System.getProperty('os.name')
 
-      try:
-        pythonpath = subprocess.check_output(['which', 'python']).split('\n')[0].rstrip('\n\r')
-      except:
-        print 'Could not find python.exe in path.\n'
-    else:
-      path_delim = '\\'
+    try:
+      if 'Windows' in ostype:
+        path_delim = '\\'
 
-      try:
-        pythonpath = subprocess.check_output(['where', 'python']).split('\n')[0].rstrip('\n\r')
-      except:
-        print 'Could not find python.exe in path.\n'
+        try:
+          pythonpath = subprocess.check_output(['where', 'python']).split('\n')[0].rstrip('\n\r')
+        except:
+          print 'Could not find python.exe in path.\n'
 
-      try:
-        pythonregpath1 = subprocess.check_output('reg query "HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\2.7\\InstallPath" /ve')
-        pathpart1 = pythonregpath1.rsplit(':', 1)[1].rstrip('\n\r')
-        drivepart1 = pythonregpath1.rsplit(':', 1)[0][-1]
-      except:
-        print 'Could not find python path in registry at: HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\2.7\\InstallPath.\n'
+        try:
+          pythonregpath1 = subprocess.check_output('reg query "HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\2.7\\InstallPath" /ve')
+          pathpart1 = pythonregpath1.rsplit(':', 1)[1].rstrip('\n\r')
+          drivepart1 = pythonregpath1.rsplit(':', 1)[0][-1]
+        except:
+          print 'Could not find python path in registry at: HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\2.7\\InstallPath.\n'
 
-      try:
-        pythonregpath2 = subprocess.check_output('reg query "HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Python\\PythonCore\\2.7\InstallPath" /ve')
-        pathpart2 = pythonregpath2.rsplit(':', 1)[1].rstrip('\n\r')
-        drivepart2 = pythonregpath2.rsplit(':', 1)[0][-1]
-      except:
-        print 'Could not find python path in registry at: HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Python\\PythonCore\\2.7\InstallPath.\n'
+        try:
+          pythonregpath2 = subprocess.check_output('reg query "HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Python\\PythonCore\\2.7\InstallPath" /ve')
+          pathpart2 = pythonregpath2.rsplit(':', 1)[1].rstrip('\n\r')
+          drivepart2 = pythonregpath2.rsplit(':', 1)[0][-1]
+        except:
+          print 'Could not find python path in registry at: HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Python\\PythonCore\\2.7\InstallPath.\n'
 
-      if re.search('[pP]ython', pathpart1):
-        pythonaltpath1 = drivepart1 + ':' + pathpart1 + path_delim + 'python.exe'
+        if re.search('[pP]ython', pathpart1):
+          pythonaltpath1 = drivepart1 + ':' + pathpart1 + path_delim + 'python.exe'
 
-      if re.search('[pP]ython', pathpart2):
-        pythonaltpath2 = drivepart2 + ':' + pathpart2 + path_delim + 'python.exe'
+        if re.search('[pP]ython', pathpart2):
+          pythonaltpath2 = drivepart2 + ':' + pathpart2 + path_delim + 'python.exe'
+      else:
+        path_delim = '/'
+
+        try:
+          pythonpath = subprocess.check_output(['which', 'python2.7']).split('\n')[0].rstrip('\n\r')
+        except:
+          print 'Could not find python.exe in path.\n'
+    except:
+      print 'Could not get OS version, therefore could not find Python path\n'
 
     # Set python variables
-    if re.search('python.exe', pythonpath):
+    if re.search('python.exe', pythonpath) or re.search('\/python2.7$', pythonpath):
       self.pythonfile = pythonpath
       print 'Python found in system path at: ' + pythonpath + '\n'
     elif re.search('python.exe', pythonaltpath1):
@@ -862,32 +868,45 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     elif re.search('python.exe', pythonaltpath2):
       self.pythonfile = pythonaltpath2
       print 'Python found in registry under HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Python\\PythonCore\\2.7\InstallPath at: ' + pythonaltpath2 + '\n'
+    else:
+      print 'Could not set the correct Python path.\n'
 
     # Get Python version to confirm 2.7.x
-    pythonver = subprocess.check_output(self.pythonfile + ' -c "import sys; print str(sys.version_info[0]) + str(sys.version_info[1])"').rstrip('\n\r')
-    if pythonver == '27':
+    if 'Windows' in ostype and re.search('python.exe', self.pythonfile):
+      try:
+        pythonver = subprocess.check_output(self.pythonfile + ' -c "import sys; print str(sys.version_info[0]) + str(sys.version_info[1])"').rstrip('\n\r')
+        if pythonver == '27':
+          self._jLabelPython.setText('Python set to: ' + self.pythonfile)
+        else:
+          self.pythonfile = ''
+          print 'Wrong version of Python: ' + pythonver[0] + '.' + pythonver[1] + '\n'
+      except:
+        print 'Could not get Python version\n'
+    elif re.search('python2.7', self.pythonfile):
       self._jLabelPython.setText('Python set to: ' + self.pythonfile)
     else:
-      self.pythonfile = ''
-      print 'Wrong version of Python: ' + pythonver[0] + '.' + pythonver[1] + '\n'
+      print 'Wrong version of Python or something went wrong.\n'
 
     # Automatically set the sqlmapapi, first unzip if the extension has never run
     if os.path.isfile(os.getcwd() + path_delim + 'sqlmap.zip'):
 
       # Extract sqlmap
-      with zipfile.ZipFile(os.getcwd() + path_delim + 'sqlmap.zip') as sqlmapzip:
-        sqlmapzip.extractall(os.getcwd() + path_delim)
+      try:
+        with zipfile.ZipFile(os.getcwd() + path_delim + 'sqlmap.zip') as sqlmapzip:
+          sqlmapzip.extractall(os.getcwd() + path_delim)
 
-      # Remove sqlmap zip file
-      os.remove(os.getcwd() + path_delim + 'sqlmap.zip')
+        # Remove sqlmap zip file
+        os.remove(os.getcwd() + path_delim + 'sqlmap.zip')
 
-      # Set API
-      if os.path.isfile(os.getcwd() + path_delim + 'sqlmap' + path_delim + 'sqlmapapi.py'):
-        self._jLabelAPI.setText('API set to: ' + os.getcwd() + path_delim + 'sqlmap' + path_delim + 'sqlmapapi.py')
-        self.apifile = os.getcwd() + path_delim + 'sqlmap' + path_delim + 'sqlmapapi.py'
-        print 'SQLMap API found at: ' + self.apifile + '\n'
-      else:
-        print 'Could not find SQLMap API file.\n'
+        # Set API
+        if os.path.isfile(os.getcwd() + path_delim + 'sqlmap' + path_delim + 'sqlmapapi.py'):
+          self._jLabelAPI.setText('API set to: ' + os.getcwd() + path_delim + 'sqlmap' + path_delim + 'sqlmapapi.py')
+          self.apifile = os.getcwd() + path_delim + 'sqlmap' + path_delim + 'sqlmapapi.py'
+          print 'SQLMap API found at: ' + self.apifile + '\n'
+        else:
+          print 'Could not find SQLMap API file.\n'
+      except:
+        print 'Failed to extract sqlmap.zip\n'
     else:
       # Set API
       if os.path.isfile(os.getcwd() + path_delim + 'sqlmap' + path_delim + 'sqlmapapi.py'):
@@ -957,7 +976,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
         print 'Failed to add data to scan tab.'
 
   def printHeader(self):
-    print 'SQLiPy - 0.6.4\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
+    print 'SQLiPy - 0.6.5\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
 
   def setAPI(self, e):
     selectFile = swing.JFileChooser()
