@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.6.5
+Version:        0.6.6
 Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -157,7 +157,7 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
                 if findings['type'] == 0:
                   vulnurl = findings['value']['url']
                   vulnparam = findings['value']['query']
-                  vulndetails = '<ul><li>URL: '+vulnurl+'</li><li>Parameter: '+vulnparam+'</li></ul>'
+                  vulndetails = '<ul><li>URL: '+str(vulnurl)+'</li><li>Parameter: '+str(vulnparam)+'</li></ul>'
 
                 # Get basic scan info
                 if findings['type'] == 1:
@@ -195,7 +195,10 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
 
                 # Get Hostname
                 elif findings['type'] == 6:
-                  hostname = 'Hostname: '+findings['value']+'<BR>'
+                  if findings['value'] is not None:
+                    hostname = 'Hostname: '+findings['value']+'<BR>'
+                  else:
+                    hostname = 'Hostname: Enumeration failed.<BR>'
 
                 # Is the user a DBA?
                 elif findings['type'] == 7:
@@ -976,7 +979,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
         print 'Failed to add data to scan tab.'
 
   def printHeader(self):
-    print 'SQLiPy - 0.6.5\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
+    print 'SQLiPy - 0.6.6\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
 
   def setAPI(self, e):
     selectFile = swing.JFileChooser()
