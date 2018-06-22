@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.6.6
+Version:        0.7.0
 Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -42,6 +42,8 @@ from java import awt
 from java.lang import Runtime
 from java.lang import Process
 from java.lang import System
+from java.lang import Runnable
+from java.lang import Thread
 from java.io import File
 from java.io import Reader
 from java.io import BufferedReader
@@ -55,6 +57,23 @@ import threading
 import time
 import zipfile
 import os
+
+class StreamGobbler(Runnable):
+
+    def __init__(self, inStream, outStream):
+        self.inStream = inStream
+        self.outStream = outStream
+        return
+
+    def run(self):
+        try:
+            while (self.inStream.read() != -1):
+                isr = InputStreamReader(self.inStream)
+                br = BufferedReader(isr)
+                print str(br.readLine())
+
+        except BaseException as ex:
+            print 'Could not read API input/output/error buffer\n'
 
 class SqlMapScanIssue(IScanIssue):
 
@@ -121,7 +140,7 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
       try:
         req = urllib2.Request('http://' + self.sqlmapip + ':' + self.sqlmapport + '/scan/' + self.sqlmaptask + '/status')
         req.add_header('Content-Type', 'application/json')
-        resp = json.load(urllib2.urlopen(req))
+        resp = json.load(urllib2.urlopen(req, timeout=10))
 
         if resp['status'] == "running":
           print 'Scan for task '+self.sqlmaptask+' is still running.\n'
@@ -147,7 +166,7 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
             try:
               req = urllib2.Request('http://' + self.sqlmapip + ':' + self.sqlmapport + '/scan/' + self.sqlmaptask + '/data')
               req.add_header('Content-Type', 'application/json')
-              resp = json.load(urllib2.urlopen(req))
+              resp = json.load(urllib2.urlopen(req, timeout=10))
               vulnerable = False
 
               for findings in resp['data']:
@@ -195,10 +214,11 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
 
                 # Get Hostname
                 elif findings['type'] == 6:
-                  if findings['value'] is not None:
-                    hostname = 'Hostname: '+findings['value']+'<BR>'
-                  else:
-                    hostname = 'Hostname: Enumeration failed.<BR>'
+                  if findings['value'] is not None: 
+                    hostname = 'Hostname: '+findings['value']+'<BR>' 
+                  else: 
+                    hostname = 'Hostname: Enumeration failed.<BR>' 
+
 
                 # Is the user a DBA?
                 elif findings['type'] == 7:
@@ -382,28 +402,75 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     self._jPanel.setLayout(awt.GridBagLayout())
     self._jPanelConstraints = awt.GridBagConstraints()
 
+    # Create panel to show API warning first line
+    self._jLabelAPIWarning1 = swing.JLabel("WARNING: Recommended to start from command shell, ")
+    self._jLabelAPIWarning1.setFont(Font("Courier New", Font.BOLD, 30))
+    self._jLabelAPIWarning1.setForeground(Color.RED)
+    self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
+    self._jPanelConstraints.gridx = 0
+    self._jPanelConstraints.gridy = 0
+    self._jPanelConstraints.gridwidth = 2
+    self._jPanel.add(self._jLabelAPIWarning1, self._jPanelConstraints)
+
+    # Create panel to show API warning second line
+    self._jLabelAPIWarning2 = swing.JLabel("the API OFTEN becomes unresponsive when started from Java!")
+    self._jLabelAPIWarning2.setFont(Font("Courier New", Font.BOLD, 30))
+    self._jLabelAPIWarning2.setForeground(Color.RED)
+    self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
+    self._jPanelConstraints.gridx = 0
+    self._jPanelConstraints.gridy = 1
+    self._jPanelConstraints.gridwidth = 2
+    self._jPanel.add(self._jLabelAPIWarning2, self._jPanelConstraints)
+
+    # Create first blank space
+    self._jLabelAPISpace1 = swing.JLabel(" ")
+    self._jLabelAPISpace1.setFont(Font("Courier New", Font.BOLD, 30))
+    self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
+    self._jPanelConstraints.gridx = 0
+    self._jPanelConstraints.gridy = 2
+    self._jPanelConstraints.gridwidth = 2
+    self._jPanel.add(self._jLabelAPISpace1, self._jPanelConstraints)
+
+    # Create second blank space
+    self._jLabelAPISpace2 = swing.JLabel(" ")
+    self._jLabelAPISpace2.setFont(Font("Courier New", Font.BOLD, 30))
+    self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
+    self._jPanelConstraints.gridx = 0
+    self._jPanelConstraints.gridy = 3
+    self._jPanelConstraints.gridwidth = 2
+    self._jPanel.add(self._jLabelAPISpace2, self._jPanelConstraints)
+
     # Create panel to show API status
     self._jLabelAPIStatus = swing.JLabel("SQLMap API is NOT running!")
     self._jLabelAPIStatus.setFont(Font("Courier New", Font.BOLD, 24))
     self._jLabelAPIStatus.setForeground(Color.RED)
     self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
     self._jPanelConstraints.gridx = 0
-    self._jPanelConstraints.gridy = 0
+    self._jPanelConstraints.gridy = 4
     self._jPanelConstraints.gridwidth = 2
     self._jPanel.add(self._jLabelAPIStatus, self._jPanelConstraints)
+
+    # Create third blank space
+    self._jLabelAPISpace3 = swing.JLabel(" ")
+    self._jLabelAPISpace3.setFont(Font("Courier New", Font.BOLD, 30))
+    self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
+    self._jPanelConstraints.gridx = 0
+    self._jPanelConstraints.gridy = 5
+    self._jPanelConstraints.gridwidth = 2
+    self._jPanel.add(self._jLabelAPISpace3, self._jPanelConstraints)
 
     # Create panel for IP info
     self._jLabelIPListen = swing.JLabel("Listen on IP:")
     self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
     self._jPanelConstraints.gridx = 0
-    self._jPanelConstraints.gridy = 1
+    self._jPanelConstraints.gridy = 6
     self._jPanelConstraints.gridwidth = 1
     self._jPanel.add(self._jLabelIPListen, self._jPanelConstraints)
 
     self._jTextFieldIPListen = swing.JTextField("127.0.0.1",15)
     self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
     self._jPanelConstraints.gridx = 1
-    self._jPanelConstraints.gridy = 1
+    self._jPanelConstraints.gridy = 6
     self._jPanelConstraints.gridwidth = 1
     self._jPanel.add(self._jTextFieldIPListen, self._jPanelConstraints)
 
@@ -411,14 +478,14 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     self._jLabelPortListen = swing.JLabel("Listen on Port:")
     self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
     self._jPanelConstraints.gridx = 0
-    self._jPanelConstraints.gridy = 2
+    self._jPanelConstraints.gridy = 7
     self._jPanelConstraints.gridwidth = 1
     self._jPanel.add(self._jLabelPortListen, self._jPanelConstraints)
 
     self._jTextFieldPortListen = swing.JTextField("9090",3)
     self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
     self._jPanelConstraints.gridx = 1
-    self._jPanelConstraints.gridy = 2
+    self._jPanelConstraints.gridy = 7
     self._jPanelConstraints.gridwidth = 1
     self._jPanel.add(self._jTextFieldPortListen, self._jPanelConstraints)
 
@@ -426,14 +493,14 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     self._jLabelPython = swing.JLabel("Select Python:")
     self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
     self._jPanelConstraints.gridx = 0
-    self._jPanelConstraints.gridy = 3
+    self._jPanelConstraints.gridy = 8
     self._jPanelConstraints.gridwidth = 1
     self._jPanel.add(self._jLabelPython, self._jPanelConstraints)
 
     self._jButtonSetPython = swing.JButton('Python', actionPerformed=self.setPython)
     self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
     self._jPanelConstraints.gridx = 1
-    self._jPanelConstraints.gridy = 3
+    self._jPanelConstraints.gridy = 8
     self._jPanelConstraints.gridwidth = 1
     self._jPanel.add(self._jButtonSetPython, self._jPanelConstraints)
 
@@ -441,14 +508,14 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     self._jLabelAPI = swing.JLabel("Select API:")
     self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
     self._jPanelConstraints.gridx = 0
-    self._jPanelConstraints.gridy = 4
+    self._jPanelConstraints.gridy = 9
     self._jPanelConstraints.gridwidth = 1
     self._jPanel.add(self._jLabelAPI, self._jPanelConstraints)
 
     self._jButtonSetAPI = swing.JButton('SQLMap API', actionPerformed=self.setAPI)
     self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
     self._jPanelConstraints.gridx = 1
-    self._jPanelConstraints.gridy = 4
+    self._jPanelConstraints.gridy = 9
     self._jPanelConstraints.gridwidth = 1
     self._jPanel.add(self._jButtonSetAPI, self._jPanelConstraints)
 
@@ -456,7 +523,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     self._jButtonStartAPI = swing.JButton('Start API', actionPerformed=self.startAPI)
     self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
     self._jPanelConstraints.gridx = 0
-    self._jPanelConstraints.gridy = 5
+    self._jPanelConstraints.gridy = 10
     self._jPanelConstraints.gridwidth = 2
     self._jPanel.add(self._jButtonStartAPI, self._jPanelConstraints)
 
@@ -464,7 +531,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     self._jButtonStopAPI = swing.JButton('Stop API', actionPerformed=self.stopAPI)
     self._jPanelConstraints.fill = awt.GridBagConstraints.HORIZONTAL
     self._jPanelConstraints.gridx = 0
-    self._jPanelConstraints.gridy = 6
+    self._jPanelConstraints.gridy = 11
     self._jPanelConstraints.gridwidth = 2
     self._jPanel.add(self._jButtonStopAPI, self._jPanelConstraints)
 
@@ -979,7 +1046,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
         print 'Failed to add data to scan tab.'
 
   def printHeader(self):
-    print 'SQLiPy - 0.6.6\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
+    print 'SQLiPy - 0.7.0\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
 
   def setAPI(self, e):
     selectFile = swing.JFileChooser()
@@ -1021,12 +1088,18 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
 
         self.apiprocess = javaexec(cmd, None, File(sqlmapdir))
 
+        self.errorGobbler = Thread(StreamGobbler(self.apiprocess.getErrorStream(), System.err))
+        self.outputGobbler = Thread(StreamGobbler(self.apiprocess.getInputStream(), System.out))
+
+        self.errorGobbler.start()
+        self.outputGobbler.start()
+
         # Final validation the API is running
         try:
           time.sleep(5)
           req = urllib2.Request('http://' + self._jTextFieldIPListen.getText() + ':' + self._jTextFieldPortListen.getText() + '/scan/0/status')
           req.add_header('Content-Type', 'application/json')
-          resp = json.load(urllib2.urlopen(req))
+          resp = json.load(urllib2.urlopen(req, timeout=10))
 
           if resp['message'] == "Invalid task ID":
             self._jLabelScanAPI.setText(self._jTextFieldIPListen.getText() + ':' + self._jTextFieldPortListen.getText())
@@ -1040,6 +1113,8 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
             print 'SQLMap API started.\n'
         except:
           self.apiprocess.destroy()
+          self.errorGobbler.join()
+          self.outputGobbler.join()
           print 'Failed to start the SQLMap API\n'
 
       except:
@@ -1053,12 +1128,12 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
         if self._jComboStopScan.getItemCount() is not 0:
           for item in range(0, self._jComboStopScan.getItemCount()):
             req = urllib2.Request('http://' + self._jTextFieldScanIPListen.getText() + ':' + self._jTextFieldScanPortListen.getText() + '/scan/' + self._jComboStopScan.getItemAt(item).split('-')[0] + '/kill')
-            resp = json.load(urllib2.urlopen(req))
+            resp = json.load(urllib2.urlopen(req, timeout=3))
 
             if resp['success'] == True:
               print 'Scan stopped for ID: '+ self._jComboStopScan.getItemAt(item).split('-')[0]+'\n'
             else:
-              print 'Failed to stop scan on ID: '+self._jComboStopScan.getItemAt(item).split('-')[0]+'\n'
+              print 'Failed to stop scan on ID: '+self._jComboStopScan.getItemAt(item).split('-')[0]+', likely already completed\n'
         
       except:
         print 'Failed to stop currently running SQLMap scans or no scans were still running\n'
@@ -1094,18 +1169,26 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
       except:
         print 'Failed to stop the SQLMap API\n'
 
+      try:
+          self.errorGobbler.join()
+          self.outputGobbler.join()
+
+          print 'Stopping API input/output/error buffers threads\n'
+      except:
+          print 'Failed to stop API input/output/error buffers threads\n'
+
   def extensionUnloaded(self):
     if self.apistatus == 1:
       try:
         if self._jComboStopScan.getItemCount() is not 0:
           for item in range(0, self._jComboStopScan.getItemCount()):
             req = urllib2.Request('http://' + self._jTextFieldScanIPListen.getText() + ':' + self._jTextFieldScanPortListen.getText() + '/scan/' + self._jComboStopScan.getItemAt(item).split('-')[0] + '/kill')
-            resp = json.load(urllib2.urlopen(req))
+            resp = json.load(urllib2.urlopen(req, timeout=3))
 
             if resp['success'] == True:
               print 'Scan stopped for ID: '+ self._jComboStopScan.getItemAt(item).split('-')[0]+'\n'
             else:
-              print 'Failed to stop scan on ID: '+self._jComboStopScan.getItemAt(item).split('-')[0]+'\n'
+              print 'Failed to stop scan on ID: '+self._jComboStopScan.getItemAt(item).split('-')[0]+', likely already completed\n'
         
       except:
         print 'Failed to stop currently running SQLMap scans or no scans were still running\n'
@@ -1128,10 +1211,18 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
       except:
         print 'Failed to stop the SQLMap API\n'
 
+      try:
+          self.errorGobbler.join()
+          self.outputGobbler.join()
+
+          print 'Stopping API input/output/error buffers threads\n'
+      except:
+          print 'Failed to stop API input/output/error buffers threads\n'
+
   def getLogs(self, button):
     try:
       req = urllib2.Request('http://' + self._jTextFieldScanIPListen.getText() + ':' + self._jTextFieldScanPortListen.getText() + '/scan/' + self._jComboLogs.getSelectedItem().split('-')[0] + '/log')
-      resp = json.load(urllib2.urlopen(req))
+      resp = json.load(urllib2.urlopen(req, timeout=10))
 
       if resp['success'] == True:
         logdata = ''
@@ -1151,18 +1242,18 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
   def stopScan(self, button):
     try:
       req = urllib2.Request('http://' + self._jTextFieldScanIPListen.getText() + ':' + self._jTextFieldScanPortListen.getText() + '/scan/' + self._jComboStopScan.getSelectedItem().split('-')[0] + '/kill')
-      resp = json.load(urllib2.urlopen(req))
+      resp = json.load(urllib2.urlopen(req, timeout=10))
 
       if resp['success'] == True:
         print 'Scan stopped for ID: '+ self._jComboStopScan.getSelectedItem().split('-')[0]+'\n'
         self._jLabelStopStatus.setText('Scan stopped for ID: ' + self._jComboStopScan.getSelectedItem().split('-')[0])
         self._jComboStopScan.removeItem(self._jComboStopScan.getSelectedItem())
       else:
-        print 'Failed to stop scan on ID: '+self._jComboStopScan.getSelectedItem().split('-')[0]+'\n'
-        self._jLabelStopStatus.setText('Failed to stop scan on ID: '+self._jComboStopScan.getSelectedItem().split('-')[0])
+        print 'Failed to stop scan on ID: '+self._jComboStopScan.getSelectedItem().split('-')[0]+', likely already completed\n'
+        self._jLabelStopStatus.setText('Failed to stop scan on ID: '+self._jComboStopScan.getSelectedItem().split('-')[0]+', likely already completed')
     except:
-      print 'Failed to stop scan on ID: '+self._jComboStopScan.getSelectedItem().split('-')[0]+'\n'
-      self._jLabelStopStatus.setText('Failed to stop scan on ID: '+self._jComboStopScan.getSelectedItem().split('-')[0])
+      print 'Failed to stop scan on ID: '+self._jComboStopScan.getSelectedItem().split('-')[0]+', likely already completed\n'
+      self._jLabelStopStatus.setText('Failed to stop scan on ID: '+self._jComboStopScan.getSelectedItem().split('-')[0]+', likely already completed')
 
   def removeScan(self, button):
     print 'Removing Scan Stop Entry for ID: '+ self._jComboStopScan.getSelectedItem().split('-')[0]+'\n'
@@ -1337,7 +1428,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
       sqlmapcmd = 'sqlmap.py -u "' + self._jTextFieldURL.getText() + '"' + datacmd + httpmethodcmd + cookiecmd + uacmd + referercmd + custheadercmd + proxycmd + torcmd + tortypecmd + torportcmd + ' --delay=' + str(self._jComboDelay.getSelectedItem()) + ' --timeout=' + str(self._jComboTimeout.getSelectedItem()) + ' --retries=' + str(self._jComboDelay.getSelectedItem()) + paramcmd + dbmscmd + oscmd + tampercmd + ' --level=' + str(self._jComboLevel.getSelectedItem()) + ' --risk=' + str(self._jComboRisk.getSelectedItem()) + textonly + hpp + ' --threads=' + str(self._jComboThreads.getSelectedItem()) + ' --time-sec=' + str(self._jComboTimeSec.getSelectedItem()) + ' -b' + cu + cdb + hostname + isdba + lusers + lpswds + lprivs + lroles + ldbs + ' --batch --answers="crack=N,dict=N"\n\n'
       print 'SQLMap Command: ' + sqlmapcmd
       req = urllib2.Request('http://' + self._jTextFieldScanIPListen.getText() + ':' + self._jTextFieldScanPortListen.getText() + '/task/new')
-      resp = json.load(urllib2.urlopen(req))
+      resp = json.load(urllib2.urlopen(req, timeout=10))
 
       if resp['success'] == True and resp['taskid']:
         sqlitask = resp['taskid']
@@ -1348,7 +1439,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
         try:
           req = urllib2.Request('http://' + self._jTextFieldScanIPListen.getText() + ':' + self._jTextFieldScanPortListen.getText() + '/option/' + sqlitask + '/set')
           req.add_header('Content-Type', 'application/json')
-          resp = json.load(urllib2.urlopen(req, json.dumps(sqliopts)))
+          resp = json.load(urllib2.urlopen(req, json.dumps(sqliopts), timeout=10))
 
           if resp['success'] == True:
             print 'SQLMap options set on Task ' + sqlitask + ': ' + json.dumps(sqliopts) + '\n'
@@ -1356,7 +1447,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
 
             try:
               checkreq = urllib2.Request('http://' + self._jTextFieldScanIPListen.getText() + ':' + self._jTextFieldScanPortListen.getText() + '/option/' + sqlitask + '/list')
-              checkresp = json.load(urllib2.urlopen(checkreq))
+              checkresp = json.load(urllib2.urlopen(checkreq, timeout=10))
               print 'SQLMap options returned: ' + json.dumps(checkresp) + '\n'
             except:
               print 'Failed to get list of options from SQLMap API\n'
@@ -1364,7 +1455,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
             try:
               req = urllib2.Request('http://' + self._jTextFieldScanIPListen.getText() + ':' + self._jTextFieldScanPortListen.getText() + '/scan/' + sqlitask + '/start')
               req.add_header('Content-Type', 'application/json')
-              resp = json.load(urllib2.urlopen(req, json.dumps(sqliopts)))
+              resp = json.load(urllib2.urlopen(req, json.dumps(sqliopts), timeout=10))
 
               if resp['success'] == True:
                 findings = ThreadExtender(self, self._jTextFieldScanIPListen.getText(), self._jTextFieldScanPortListen.getText(), sqlitask, self.scanUrl, self.scanMessage, self._callbacks)
