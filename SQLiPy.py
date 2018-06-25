@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.7.0
+Version:        0.7.1
 Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -215,7 +215,7 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
                 # Get Hostname
                 elif findings['type'] == 6:
                   if findings['value'] is not None: 
-                    hostname = 'Hostname: '+findings['value']+'<BR>' 
+                    hostname = 'Hostname: '+str(findings['value'])+'<BR>' 
                   else: 
                     hostname = 'Hostname: Enumeration failed.<BR>' 
 
@@ -284,12 +284,15 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
                     else:
                       userdata = userdata + '<li>'+users+'</li>'
 
-                    for priv in findings['value'][users]:
-                      if firstpriv:
-                        firstpriv = False
-                        userprivs = '<li>'+priv+'</li>'
-                      else:
-                        userprivs = userprivs + '<li>'+priv+'</li>'
+                    if findings['value'][users] is not None:
+                      for priv in findings['value'][users]:
+                        if firstpriv:
+                          firstpriv = False
+                          userprivs = '<li>'+priv+'</li>'
+                        else:
+                          userprivs = userprivs + '<li>'+priv+'</li>'
+                    else:
+                      userprivs = '<li>Null</li>'
 
                     lprivs = lprivs + userdata + '<ul>'+userprivs+'</ul>'
                     userdata = ''
@@ -313,12 +316,15 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
                     else:
                       userdata = userdata + '<li>'+users+'</li>'
 
-                    for role in findings['value'][users]:
-                      if firstrole:
-                        firstrole = False
-                        userroles = '<li>'+role+'</li>'
-                      else:
-                        userroles = userroles + '<li>'+role+'</li>'
+                    if findings['value'][users] is not None:
+                      for role in findings['value'][users]:
+                        if firstrole:
+                          firstrole = False
+                          userroles = '<li>'+role+'</li>'
+                        else:
+                          userroles = userroles + '<li>'+role+'</li>'
+                    else:
+                      userroles = '<li>Null</li>'
 
                     lroles = lroles + userdata + '<ul>'+userroles+'</ul>'
                     userdata = ''
@@ -332,10 +338,10 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
                   firstdb = True
                   for db in findings['value']:
                     if firstdb:
-                      ldbs = '<li>'+db+'</li>'
+                      ldbs = '<li>'+str(db)+'</li>'
                       firstdb = False
                     else:
-                      ldbs = ldbs + '<li>'+db+'</li>'
+                      ldbs = ldbs + '<li>'+str(db)+'</li>'
 
                   if firstdb == False:
                     ldbs = 'Databases:<ul>' + ldbs + '</ul><BR>'
@@ -1046,7 +1052,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
         print 'Failed to add data to scan tab.'
 
   def printHeader(self):
-    print 'SQLiPy - 0.7.0\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
+    print 'SQLiPy - 0.7.1\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
 
   def setAPI(self, e):
     selectFile = swing.JFileChooser()
