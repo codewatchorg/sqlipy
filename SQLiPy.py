@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.7.1
+Version:        0.7.2
 Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -551,6 +551,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     timeoutValues = [1,5,10,15,20,25,30,35,40,45,50,55,60]
     retryValues = [1,2,3,4,5,6,7,8,9,10]
     dbmsValues = ['Any', 'MySQL', 'Oracle', 'PostgreSQL', 'Microsoft SQL Server', 'Microsoft Access', 'SQLite', 'Firebird', 'Sybase', 'SAP MaxDB', 'DB2']
+    authTypes = ['None', 'Basic', 'Digest', 'NTLM']
     osValues = ['Any', 'Linux', 'Windows']
     timeSecValues = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
     torTypes = ['HTTP', 'SOCKS4', 'SOCKS5']
@@ -630,6 +631,13 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     self._jComboTorType = swing.JComboBox(torTypes)
     self._jLabelTorPort = swing.JLabel()
     self._jTextFieldTorPort = swing.JTextField()
+    self._jSeparator11 = swing.JSeparator()
+    self._jLabelAuthType = swing.JLabel()
+    self._jComboAuthType = swing.JComboBox(authTypes)
+    self._jLabelAuthUser = swing.JLabel()
+    self._jTextFieldAuthUser = swing.JTextField()
+    self._jLabelAuthPass = swing.JLabel()
+    self._jTextFieldAuthPass = swing.JTextField()
 
     # Configure GUI
     self._jLabelScanText.setText('API Listening On:')
@@ -671,6 +679,10 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     self._jLabelTorType.setText('Tor Type:')
     self._jLabelTorPort.setText('Tor Port:')
     self._jTextFieldTorPort.setText('9050')
+    self._jLabelAuthType.setText('Auth Type:')
+    self._jLabelAuthUser.setText('Auth User:')
+    self._jLabelAuthPass.setText('Auth Pass:')
+    self._jComboAuthType.setSelectedIndex(0)
 
     # Configure locations
     self._jLabelScanText.setBounds(15, 16, 126, 20)
@@ -742,13 +754,20 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     self._jLabelTamper.setBounds(15, 1055, 171, 20)
     self._jTextFieldTamper.setBounds(204, 1052, 256, 26)
     self._jSeparator10.setBounds(15, 1098, 790, 10)
-    self._jButtonStartScan.setBounds(346, 1123, 103, 29)
+    self._jLabelAuthType.setBounds(15, 1123, 171, 20)
+    self._jComboAuthType.setBounds(204, 1123, 100, 26)
+    self._jLabelAuthUser.setBounds(15, 1172, 171, 20)
+    self._jTextFieldAuthUser.setBounds(204, 1172, 256, 26)
+    self._jLabelAuthPass.setBounds(15, 1221, 171, 20)
+    self._jTextFieldAuthPass.setBounds(204, 1221, 256, 26)
+    self._jSeparator11.setBounds(15, 1267, 790, 10)
+    self._jButtonStartScan.setBounds(346, 1292, 103, 29)
     self._jLabelScanAPI.setBounds(167, 16, 275, 20)
 
     # Create main panel
     self._jScanPanel = swing.JPanel()
     self._jScanPanel.setLayout(None)
-    self._jScanPanel.setPreferredSize(awt.Dimension(1200,1200))
+    self._jScanPanel.setPreferredSize(awt.Dimension(1368,1368))
     self._jScanPanel.add(self._jLabelScanText)
     self._jScanPanel.add(self._jLabelScanIPListen)
     self._jScanPanel.add(self._jLabelScanPortListen)
@@ -818,11 +837,18 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     self._jScanPanel.add(self._jLabelTamper)
     self._jScanPanel.add(self._jTextFieldTamper)
     self._jScanPanel.add(self._jSeparator10)
+    self._jScanPanel.add(self._jLabelAuthType)
+    self._jScanPanel.add(self._jComboAuthType)
+    self._jScanPanel.add(self._jLabelAuthUser)
+    self._jScanPanel.add(self._jTextFieldAuthUser)
+    self._jScanPanel.add(self._jLabelAuthPass)
+    self._jScanPanel.add(self._jTextFieldAuthPass)
+    self._jScanPanel.add(self._jSeparator11)
     self._jScanPanel.add(self._jButtonStartScan)
     self._jScanPanel.add(self._jLabelScanAPI)
     self._jScrollPaneMain = swing.JScrollPane(self._jScanPanel)
     self._jScrollPaneMain.setViewportView(self._jScanPanel)
-    self._jScrollPaneMain.setPreferredSize(awt.Dimension(1189,1189))
+    self._jScrollPaneMain.setPreferredSize(awt.Dimension(1357,1357))
 
     # Create SQLMap log JPanel
     self._jLogPanel = swing.JPanel()
@@ -1052,7 +1078,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
         print 'Failed to add data to scan tab.'
 
   def printHeader(self):
-    print 'SQLiPy - 0.7.1\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
+    print 'SQLiPy - 0.7.2\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
 
   def setAPI(self, e):
     selectFile = swing.JFileChooser()
@@ -1307,6 +1333,10 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     torportcmd = ''
     httpmethod = None
     httpmethodcmd = ''
+    authtype = None
+    authtypecmd = ''
+    authcred = None
+    authcredcmd = ''
 
     if self._jCheckTO.isSelected():
       textonly = ' --text-only'
@@ -1386,6 +1416,21 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
       tortype = 'HTTP'
       torport = None
 
+    if not re.search('^None$', self._jComboAuthType.getSelectedItem()) is not None and re.search('[a-zA-Z0-9]', self._jTextFieldAuthUser.getText()) is not None:
+      authtype = self._jComboAuthType.getSelectedItem()
+      authtypecmd = ' --auth-type=' + self._jComboAuthType.getSelectedItem()
+      authuser = self._jTextFieldAuthUser.getText()
+      authpass = self._jTextFieldAuthPass.getText()
+      authcred = authuser + ':' + authpass
+      authcredcmd = ' --auth-cred="' + authuser + ':' + authpass + '"'
+    else:
+      authtype = None
+      authtypecmd = ''
+      authuser = ''
+      authpass = ''
+      authcred = None
+      authcredcmd = ''  
+
     if re.search('(http|https)\://', self._jTextFieldProxy.getText()) is not None:
       proxy = self._jTextFieldProxy.getText()
       proxycmd = ' --proxy=' + self._jTextFieldProxy.getText()
@@ -1431,14 +1476,14 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
       paramcmd = ' -p "' + self._jTextFieldParam.getText() + '"'
 
     try:
-      sqlmapcmd = 'sqlmap.py -u "' + self._jTextFieldURL.getText() + '"' + datacmd + httpmethodcmd + cookiecmd + uacmd + referercmd + custheadercmd + proxycmd + torcmd + tortypecmd + torportcmd + ' --delay=' + str(self._jComboDelay.getSelectedItem()) + ' --timeout=' + str(self._jComboTimeout.getSelectedItem()) + ' --retries=' + str(self._jComboDelay.getSelectedItem()) + paramcmd + dbmscmd + oscmd + tampercmd + ' --level=' + str(self._jComboLevel.getSelectedItem()) + ' --risk=' + str(self._jComboRisk.getSelectedItem()) + textonly + hpp + ' --threads=' + str(self._jComboThreads.getSelectedItem()) + ' --time-sec=' + str(self._jComboTimeSec.getSelectedItem()) + ' -b' + cu + cdb + hostname + isdba + lusers + lpswds + lprivs + lroles + ldbs + ' --batch --answers="crack=N,dict=N"\n\n'
+      sqlmapcmd = 'sqlmap.py -u "' + self._jTextFieldURL.getText() + '"' + datacmd + httpmethodcmd + cookiecmd + uacmd + referercmd + custheadercmd + authtypecmd + authcredcmd + proxycmd + torcmd + tortypecmd + torportcmd + ' --delay=' + str(self._jComboDelay.getSelectedItem()) + ' --timeout=' + str(self._jComboTimeout.getSelectedItem()) + ' --retries=' + str(self._jComboDelay.getSelectedItem()) + paramcmd + dbmscmd + oscmd + tampercmd + ' --level=' + str(self._jComboLevel.getSelectedItem()) + ' --risk=' + str(self._jComboRisk.getSelectedItem()) + textonly + hpp + ' --threads=' + str(self._jComboThreads.getSelectedItem()) + ' --time-sec=' + str(self._jComboTimeSec.getSelectedItem()) + ' -b' + cu + cdb + hostname + isdba + lusers + lpswds + lprivs + lroles + ldbs + ' --batch --answers="crack=N,dict=N"\n\n'
       print 'SQLMap Command: ' + sqlmapcmd
       req = urllib2.Request('http://' + self._jTextFieldScanIPListen.getText() + ':' + self._jTextFieldScanPortListen.getText() + '/task/new')
       resp = json.load(urllib2.urlopen(req, timeout=10))
 
       if resp['success'] == True and resp['taskid']:
         sqlitask = resp['taskid']
-        sqliopts = {'csrfUrl': csrfurl, 'csrfToken': csrftoken, 'getUsers': lusersstatus, 'getPasswordHashes': lpswdsstatus, 'delay': self._jComboDelay.getSelectedItem(), 'isDba': isdbastatus, 'risk': self._jComboRisk.getSelectedItem(), 'getCurrentUser': custatus, 'getRoles': lrolesstatus, 'getPrivileges': lprivsstatus, 'testParameter': paramdata, 'timeout': self._jComboTimeout.getSelectedItem(), 'torPort': torport, 'level': self._jComboLevel.getSelectedItem(), 'getCurrentDb': cdbstatus, 'answers': 'crack=N,dict=N', 'method': httpmethod, 'cookie': cookiedata, 'proxy': proxy, 'os': os, 'threads': self._jComboThreads.getSelectedItem(), 'url': self._jTextFieldURL.getText(), 'getDbs': ldbsstatus, 'tor': torstatus, 'torType': tortype, 'referer': refererdata, 'retries': self._jComboRetry.getSelectedItem(), 'headers': custheaderdata, 'timeSec': self._jComboTimeSec.getSelectedItem(), 'getHostname': hostnamestatus, 'agent': uadata, 'dbms': dbms, 'tamper': tamperdata, 'hpp': hppstatus, 'getBanner': 'true', 'data': postdata, 'textOnly': textonlystatus}
+        sqliopts = {'authType': authtype, 'csrfUrl': csrfurl, 'csrfToken': csrftoken, 'getUsers': lusersstatus, 'getPasswordHashes': lpswdsstatus, 'delay': self._jComboDelay.getSelectedItem(), 'isDba': isdbastatus, 'risk': self._jComboRisk.getSelectedItem(), 'getCurrentUser': custatus, 'getRoles': lrolesstatus, 'getPrivileges': lprivsstatus, 'testParameter': paramdata, 'timeout': self._jComboTimeout.getSelectedItem(), 'torPort': torport, 'level': self._jComboLevel.getSelectedItem(), 'getCurrentDb': cdbstatus, 'answers': 'crack=N,dict=N', 'method': httpmethod, 'cookie': cookiedata, 'proxy': proxy, 'os': os, 'threads': self._jComboThreads.getSelectedItem(), 'url': self._jTextFieldURL.getText(), 'getDbs': ldbsstatus, 'tor': torstatus, 'torType': tortype, 'referer': refererdata, 'retries': self._jComboRetry.getSelectedItem(), 'headers': custheaderdata, 'authCred': authcred, 'timeSec': self._jComboTimeSec.getSelectedItem(), 'getHostname': hostnamestatus, 'agent': uadata, 'dbms': dbms, 'tamper': tamperdata, 'hpp': hppstatus, 'getBanner': 'true', 'data': postdata, 'textOnly': textonlystatus}
 
         print 'Created SQLMap Task: ' + sqlitask + '\n'
 
