@@ -397,7 +397,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
   def registerExtenderCallbacks(self, callbacks):
     # Print information about the plugin, set extension name, setup basic stuff
     self.printHeader()
-    callbacks.setExtensionName("SQLiPy")
+    callbacks.setExtensionName("SQLiPy Sqlmap Integration")
     callbacks.registerExtensionStateListener(self)
     self._callbacks = callbacks
     self._helpers = callbacks.getHelpers()
