@@ -28,7 +28,3 @@ This will populate the SQLMap Scanner tab of the plugin with information about t
 If the page is vulnerable to SQL injection, then a thread from the plugin will poll the results and add them to the Scanner Results tab.
 
 For more information, see the post here: https://www.codewatch.org/blog/?p=402
-
-Note
-=====
-The extension can start the sqlmapapi.py script, but this is not recommended.  It has been observed in numerous instances that the API becomes unresponsive when started this way.  Updates have been made to solve this issue, but I still recommend starting the API from a command shell.
