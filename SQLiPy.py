@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.8.0
+Version:        0.8.1
 Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -1065,7 +1065,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
         print 'Failed to add data to scan tab.'
 
   def printHeader(self):
-    print 'SQLiPy - 0.8.0\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
+    print 'SQLiPy - 0.8.1\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
 
   def setAPI(self, e):
     selectFile = swing.JFileChooser()
@@ -1469,14 +1469,14 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
       paramcmd = ' -p "' + self._jTextFieldParam.getText() + '"'
 
     try:
-      sqlmapcmd = 'sqlmap.py -u "' + self._jTextFieldURL.getText() + '"' + datacmd + httpmethodcmd + cookiecmd + uacmd + referercmd + custheadercmd + authtypecmd + authcredcmd + ignorecodecmd + proxycmd + torcmd + tortypecmd + torportcmd + ' --delay=' + str(self._jComboDelay.getSelectedItem()) + ' --timeout=' + str(self._jComboTimeout.getSelectedItem()) + ' --retries=' + str(self._jComboDelay.getSelectedItem()) + paramcmd + dbmscmd + oscmd + tampercmd + ' --level=' + str(self._jComboLevel.getSelectedItem()) + ' --risk=' + str(self._jComboRisk.getSelectedItem()) + textonly + hpp + ' --threads=' + str(self._jComboThreads.getSelectedItem()) + ' --time-sec=' + str(self._jComboTimeSec.getSelectedItem()) + ' -b' + cu + cdb + hostname + isdba + lusers + lpswds + lprivs + lroles + ldbs + ' --batch --answers="crack=N,dict=N"\n\n'
+      sqlmapcmd = 'sqlmap.py -u "' + self._jTextFieldURL.getText() + '"' + datacmd + httpmethodcmd + cookiecmd + uacmd + referercmd + custheadercmd + authtypecmd + authcredcmd + ignorecodecmd + proxycmd + torcmd + tortypecmd + torportcmd + ' --delay=' + str(self._jComboDelay.getSelectedItem()) + ' --timeout=' + str(self._jComboTimeout.getSelectedItem()) + ' --retries=' + str(self._jComboDelay.getSelectedItem()) + paramcmd + dbmscmd + oscmd + tampercmd + ' --level=' + str(self._jComboLevel.getSelectedItem()) + ' --risk=' + str(self._jComboRisk.getSelectedItem()) + textonly + hpp + ' --threads=' + str(self._jComboThreads.getSelectedItem()) + ' --time-sec=' + str(self._jComboTimeSec.getSelectedItem()) + ' -b' + cu + cdb + hostname + isdba + lusers + lpswds + lprivs + lroles + ldbs + ' --batch --answers="crack=N,dict=N,quit=N"\n\n'
       print 'SQLMap Command: ' + sqlmapcmd
       req = urllib2.Request('http://' + self._jTextFieldScanIPListen.getText() + ':' + self._jTextFieldScanPortListen.getText() + '/task/new')
       resp = json.load(urllib2.urlopen(req, timeout=10))
 
       if resp['success'] == True and resp['taskid']:
         sqlitask = resp['taskid']
-        sqliopts = {'authType': authtype, 'csrfUrl': csrfurl, 'csrfToken': csrftoken, 'getUsers': lusersstatus, 'getPasswordHashes': lpswdsstatus, 'delay': self._jComboDelay.getSelectedItem(), 'isDba': isdbastatus, 'risk': self._jComboRisk.getSelectedItem(), 'getCurrentUser': custatus, 'getRoles': lrolesstatus, 'getPrivileges': lprivsstatus, 'testParameter': paramdata, 'timeout': self._jComboTimeout.getSelectedItem(), 'ignoreCode': ignorecodedata, 'torPort': torport, 'level': self._jComboLevel.getSelectedItem(), 'getCurrentDb': cdbstatus, 'answers': 'crack=N,dict=N', 'method': httpmethod, 'cookie': cookiedata, 'proxy': proxy, 'os': os, 'threads': self._jComboThreads.getSelectedItem(), 'url': self._jTextFieldURL.getText(), 'getDbs': ldbsstatus, 'tor': torstatus, 'torType': tortype, 'referer': refererdata, 'retries': self._jComboRetry.getSelectedItem(), 'headers': custheaderdata, 'authCred': authcred, 'timeSec': self._jComboTimeSec.getSelectedItem(), 'getHostname': hostnamestatus, 'agent': uadata, 'dbms': dbms, 'tamper': tamperdata, 'hpp': hppstatus, 'getBanner': 'true', 'data': postdata, 'textOnly': textonlystatus}
+        sqliopts = {'authType': authtype, 'csrfUrl': csrfurl, 'csrfToken': csrftoken, 'getUsers': lusersstatus, 'getPasswordHashes': lpswdsstatus, 'delay': self._jComboDelay.getSelectedItem(), 'isDba': isdbastatus, 'risk': self._jComboRisk.getSelectedItem(), 'getCurrentUser': custatus, 'getRoles': lrolesstatus, 'getPrivileges': lprivsstatus, 'testParameter': paramdata, 'timeout': self._jComboTimeout.getSelectedItem(), 'ignoreCode': ignorecodedata, 'torPort': torport, 'level': self._jComboLevel.getSelectedItem(), 'getCurrentDb': cdbstatus, 'answers': 'crack=N,dict=N,quit=N', 'method': httpmethod, 'cookie': cookiedata, 'proxy': proxy, 'os': os, 'threads': self._jComboThreads.getSelectedItem(), 'url': self._jTextFieldURL.getText(), 'getDbs': ldbsstatus, 'tor': torstatus, 'torType': tortype, 'referer': refererdata, 'retries': self._jComboRetry.getSelectedItem(), 'headers': custheaderdata, 'authCred': authcred, 'timeSec': self._jComboTimeSec.getSelectedItem(), 'getHostname': hostnamestatus, 'agent': uadata, 'dbms': dbms, 'tamper': tamperdata, 'hpp': hppstatus, 'getBanner': 'true', 'data': postdata, 'textOnly': textonlystatus}
 
         print 'Created SQLMap Task: ' + sqlitask + '\n'
 
