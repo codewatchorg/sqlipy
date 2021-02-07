@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.8.1
+Version:        0.8.2
 Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -530,7 +530,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     delayValues = [0,1,2,3,4,5]
     timeoutValues = [1,5,10,15,20,25,30,35,40,45,50,55,60]
     retryValues = [1,2,3,4,5,6,7,8,9,10]
-    dbmsValues = ['Any', 'MySQL', 'Oracle', 'PostgreSQL', 'Microsoft SQL Server', 'Microsoft Access', 'SQLite', 'Firebird', 'Sybase', 'SAP MaxDB', 'DB2']
+    dbmsValues = ['Any', 'MySQL', 'Oracle', 'PostgreSQL', 'Microsoft SQL Server', 'Microsoft Access', 'SQLite', 'Firebird', 'Sybase', 'SAP MaxDB', 'DB2', 'Informix', 'MariaDB', 'Percona', 'MemSQL', 'TiDB', 'CockroachDB', 'HSQLDB', 'H2', 'MonetDB', 'Apache Derby', 'Amazon Redshift', 'Vertica', 'Mckoi', 'Presto', 'Altibase', 'MimerSQL', 'CrateDB', 'Greenplum', 'Drizzle', 'Apache Ignite', 'Cubrid', 'InterSystems Cache', 'IRIS', 'eXtremeDB', 'FrontBase']
     authTypes = ['None', 'Basic', 'Digest', 'NTLM']
     osValues = ['Any', 'Linux', 'Windows']
     timeSecValues = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
@@ -934,44 +934,75 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
 
         if re.search('[pP]ython', pathpart1):
           pythonaltpath1 = drivepart1 + ':' + pathpart1 + path_delim + 'python.exe'
+        else:
+          try:
+            pythonregpath1 = subprocess.check_output('reg query "HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore" /se #')
+            match = re.findall("3\.\d", str(pythonregpath1))
+            pythonregpath1 = subprocess.check_output('reg query "HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\' + match[0] + '\\InstallPath" /v ExecutablePath')
+            pathpart1 = str(pythonregpath1).rsplit(':', 1)[1].rstrip('\n\r')[:-9]
+            drivepart1 = str(pythonregpath1).rsplit(':', 1)[0][-1]
+          except:
+            print 'Could not find python path in registry at: HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\3.x\\InstallPath\\ExecutablePath.\n'
+
+          if re.search('[pP]ython', pathpart1):
+            pythonaltpath1 = drivepart1 + ':' + pathpart1
 
         if re.search('[pP]ython', pathpart2):
           pythonaltpath2 = drivepart2 + ':' + pathpart2 + path_delim + 'python.exe'
+        else:
+          try:
+            pythonregpath2 = subprocess.check_output('reg query "HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Python\\PythonCore" /se #')
+            match = re.findall("3\.\d", str(pythonregpath1))
+            pythonregpath2 = subprocess.check_output('reg query "HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Python\\PythonCore\\' + match[0] + '\\InstallPath" /v ExecutablePath')
+            pathpart2 = str(pythonregpath1).rsplit(':', 1)[1].rstrip('\n\r')[:-9]
+            drivepart2 = str(pythonregpath1).rsplit(':', 1)[0][-1]
+          except:
+            print 'Could not find python path in registry at: HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Python\\PythonCore\\3.x\\InstallPath\\ExecutablePath.\n'
+
+          if re.search('[pP]ython', pathpart2):
+            pythonaltpath2 = drivepart2 + ':' + pathpart2
       else:
         path_delim = '/'
 
         try:
           pythonpath = subprocess.check_output(['which', 'python2.7']).split('\n')[0].rstrip('\n\r')
         except:
-          print 'Could not find python.exe in path.\n'
+          print 'Could not find python2 in path.\n'
+
+        if re.search('\/python2.7$', pythonpath) is None:
+          try:
+            pythonpath = subprocess.check_output(['which', 'python3']).split('\n')[0].rstrip('\n\r')
+          except:
+            print 'Could not find python3 in path.\n'
+
     except:
       print 'Could not get OS version, therefore could not find Python path\n'
 
     # Set python variables
-    if re.search('python.exe', pythonpath) or re.search('\/python2.7$', pythonpath):
+    if re.search('python.exe', pythonpath) or re.search('\/python2.7$', pythonpath) or re.search('\/python3', pythonpath):
       self.pythonfile = pythonpath
       print 'Python found in system path at: ' + pythonpath + '\n'
     elif re.search('python.exe', pythonaltpath1):
       self.pythonfile = pythonaltpath1
-      print 'Python found in registry under HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\2.7\\InstallPath at: ' + pythonaltpath1 + '\n'
+      print 'Python found in registry under HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\2.7 or 3.x\\InstallPath at: ' + pythonaltpath1 + '\n'
     elif re.search('python.exe', pythonaltpath2):
       self.pythonfile = pythonaltpath2
-      print 'Python found in registry under HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Python\\PythonCore\\2.7\InstallPath at: ' + pythonaltpath2 + '\n'
+      print 'Python found in registry under HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Python\\PythonCore\\2.7 or 3.x\InstallPath at: ' + pythonaltpath2 + '\n'
     else:
       print 'Could not set the correct Python path.\n'
 
     # Get Python version to confirm 2.7.x
     if 'Windows' in ostype and re.search('python.exe', self.pythonfile):
       try:
-        pythonver = subprocess.check_output(self.pythonfile + ' -c "import sys; print str(sys.version_info[0]) + str(sys.version_info[1])"').rstrip('\n\r')
-        if pythonver == '27':
+        pythonver = subprocess.check_output(self.pythonfile + ' -c "import sys; print(str(sys.version_info[0]) + str(sys.version_info[1]))"')
+        if str(pythonver[:-2]) == '27' or re.search('3\d', str(pythonver[:-2])):
           self._jLabelPython.setText('Python set to: ' + self.pythonfile)
         else:
           self.pythonfile = ''
           print 'Wrong version of Python: ' + pythonver[0] + '.' + pythonver[1] + '\n'
       except:
         print 'Could not get Python version\n'
-    elif re.search('python2.7', self.pythonfile):
+    elif re.search('python2.7', self.pythonfile) or re.search('python3', self.pythonfile):
       self._jLabelPython.setText('Python set to: ' + self.pythonfile)
     else:
       print 'Wrong version of Python or something went wrong.\n'
@@ -1065,7 +1096,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
         print 'Failed to add data to scan tab.'
 
   def printHeader(self):
-    print 'SQLiPy - 0.8.1\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
+    print 'SQLiPy - 0.8.2\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
 
   def setAPI(self, e):
     selectFile = swing.JFileChooser()
@@ -1326,6 +1357,9 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     authtypecmd = ''
     authcred = None
     authcredcmd = ''
+    livecookies = None
+    skipheuristics = None
+    proxyfreq = None
 
     if self._jCheckTO.isSelected():
       textonly = ' --text-only'
@@ -1476,7 +1510,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
 
       if resp['success'] == True and resp['taskid']:
         sqlitask = resp['taskid']
-        sqliopts = {'authType': authtype, 'csrfUrl': csrfurl, 'csrfToken': csrftoken, 'getUsers': lusersstatus, 'getPasswordHashes': lpswdsstatus, 'delay': self._jComboDelay.getSelectedItem(), 'isDba': isdbastatus, 'risk': self._jComboRisk.getSelectedItem(), 'getCurrentUser': custatus, 'getRoles': lrolesstatus, 'getPrivileges': lprivsstatus, 'testParameter': paramdata, 'timeout': self._jComboTimeout.getSelectedItem(), 'ignoreCode': ignorecodedata, 'torPort': torport, 'level': self._jComboLevel.getSelectedItem(), 'getCurrentDb': cdbstatus, 'answers': 'crack=N,dict=N,continue=Y,quit=N', 'method': httpmethod, 'cookie': cookiedata, 'proxy': proxy, 'os': os, 'threads': self._jComboThreads.getSelectedItem(), 'url': self._jTextFieldURL.getText(), 'getDbs': ldbsstatus, 'tor': torstatus, 'torType': tortype, 'referer': refererdata, 'retries': self._jComboRetry.getSelectedItem(), 'headers': custheaderdata, 'authCred': authcred, 'timeSec': self._jComboTimeSec.getSelectedItem(), 'getHostname': hostnamestatus, 'agent': uadata, 'dbms': dbms, 'tamper': tamperdata, 'hpp': hppstatus, 'getBanner': 'true', 'data': postdata, 'textOnly': textonlystatus}
+        sqliopts = {'authType': authtype, 'csrfUrl': csrfurl, 'csrfToken': csrftoken, 'liveCookies': livecookies, 'skipHeuristics': skipheuristics, 'proxyFreq': proxyfreq, 'getUsers': lusersstatus, 'getPasswordHashes': lpswdsstatus, 'delay': self._jComboDelay.getSelectedItem(), 'isDba': isdbastatus, 'risk': self._jComboRisk.getSelectedItem(), 'getCurrentUser': custatus, 'getRoles': lrolesstatus, 'getPrivileges': lprivsstatus, 'testParameter': paramdata, 'timeout': self._jComboTimeout.getSelectedItem(), 'ignoreCode': ignorecodedata, 'torPort': torport, 'level': self._jComboLevel.getSelectedItem(), 'getCurrentDb': cdbstatus, 'answers': 'crack=N,dict=N,continue=Y,quit=N', 'method': httpmethod, 'cookie': cookiedata, 'proxy': proxy, 'os': os, 'threads': self._jComboThreads.getSelectedItem(), 'url': self._jTextFieldURL.getText(), 'getDbs': ldbsstatus, 'tor': torstatus, 'torType': tortype, 'referer': refererdata, 'retries': self._jComboRetry.getSelectedItem(), 'headers': custheaderdata, 'authCred': authcred, 'timeSec': self._jComboTimeSec.getSelectedItem(), 'getHostname': hostnamestatus, 'agent': uadata, 'dbms': dbms, 'tamper': tamperdata, 'hpp': hppstatus, 'getBanner': 'true', 'data': postdata, 'textOnly': textonlystatus}
 
         print 'Created SQLMap Task: ' + sqlitask + '\n'
 
