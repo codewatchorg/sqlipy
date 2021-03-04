@@ -3,9 +3,10 @@ ExtensionType: 2
 Name: SQLiPy Sqlmap Integration
 RepoName: sqli-py
 ScreenVersion: 0.8.2
-SerialVersion: 18
+SerialVersion: 19
 MinPlatformVersion: 0
 ProOnly: False
 Author: Josh Berry @ CodeWatch
 ShortDescription: Initiates SQLMap scans directly from within Burp.
 EntryPoint: SQLiPy.py
+BuildCommand: 
