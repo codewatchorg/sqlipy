@@ -11,6 +11,8 @@ Requirements
 Jython 2.7 beta, due to the use of json<BR>
 Java 1.7 or 1.8 (the beta version of Jython 2.7 requires this)
 
+  <b>Note:</b> Newer versions of Java do appear to work. Testing with jdk-11.0.7 works fine and newer versions are expected to work as well.
+
 Usage
 =====
 
