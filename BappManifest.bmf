@@ -2,8 +2,8 @@ Uuid: f154175126a04bfe8edc6056f340f52e
 ExtensionType: 2
 Name: SQLiPy Sqlmap Integration
 RepoName: sqli-py
-ScreenVersion: 0.8.2
-SerialVersion: 18
+ScreenVersion: 0.8.6
+SerialVersion: 19
 MinPlatformVersion: 0
 ProOnly: False
 Author: Josh Berry @ CodeWatch
