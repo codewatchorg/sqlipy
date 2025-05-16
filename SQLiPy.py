@@ -638,7 +638,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     self._jLabelCookie.setText('Cookies:')
     self._jLabelReferer.setText('Referer:')
     self._jLabelUA.setText('User-Agent:')
-    self._jLabelCustHeader.setText('Custom Headers:')
+    self._jLabelCustHeader.setText('Extra Headers:')
     self._jLabelParam.setText('Test Parameter(s):')
     self._jCheckTO.setText('Text Only')
     self._jLabelLevel.setText('Level:')
@@ -1082,6 +1082,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
         referer = ''
         ua = ''
         cookie = ''
+        headerString = ''
 
         for header in reqHeaders:
           if re.search('^Referer', header, re.IGNORECASE) is not None:
@@ -1090,12 +1091,15 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
             ua = re.sub('^User-Agent\:\s+', '', header, re.IGNORECASE)
           elif re.search('^Cookie', header, re.IGNORECASE) is not None:
             cookie = re.sub('^Cookie\:\s+', '', header, re.IGNORECASE)
+          elif ':' in header:
+            headerString += ("\\n" if headerString != "" else "") + header
 
         self._jTextFieldURL.setText(reqUrl)
         self._jTextData.setText(bodyData)
         self._jTextFieldCookie.setText(cookie)
         self._jTextFieldUA.setText(ua)
         self._jTextFieldReferer.setText(referer)
+        self._jTextFieldCustHeader.setText(headerString)
         self._jConfigTab.setSelectedComponent(self._jScrollPaneMain)
         self.scanMessage = message
         self.scanUrl = reqInfo.getUrl()
