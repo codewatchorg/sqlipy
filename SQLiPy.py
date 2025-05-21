@@ -1,6 +1,6 @@
 """
 Name:           SQLiPy
-Version:        0.8.5
+Version:        0.8.6
 Date:           9/3/2014
 Author:         Josh Berry - josh.berry@codewatch.org
 Github:         https://github.com/codewatchorg/sqlipy
@@ -561,6 +561,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     self._jTextFieldUA = swing.JTextField()
     self._jLabelCustHeader = swing.JLabel()
     self._jTextFieldCustHeader = swing.JTextField()
+    self._jCustHeadCheckParam = swing.JCheckBox()
     self._jSeparator2 = swing.JSeparator()
     self._jLabelParam = swing.JLabel()
     self._jTextFieldParam = swing.JTextField()
@@ -638,8 +639,9 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     self._jLabelCookie.setText('Cookies:')
     self._jLabelReferer.setText('Referer:')
     self._jLabelUA.setText('User-Agent:')
-    self._jLabelCustHeader.setText('Custom Headers:')
+    self._jLabelCustHeader.setText('Extra Headers:')
     self._jLabelParam.setText('Test Parameter(s):')
+    self._jCustHeadCheckParam.setText('Add Headers')
     self._jCheckTO.setText('Text Only')
     self._jLabelLevel.setText('Level:')
     self._jLabelRisk.setText('Risk:')
@@ -694,7 +696,8 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     self._jLabelUA.setBounds(15, 445, 86, 20)
     self._jTextFieldUA.setBounds(166, 445, 535, 26)
     self._jLabelCustHeader.setBounds(15, 494, 132, 20)
-    self._jTextFieldCustHeader.setBounds(166, 494, 535, 26)
+    self._jTextFieldCustHeader.setBounds(166, 494, 366, 26)
+    self._jCustHeadCheckParam.setBounds(584, 494, 101, 29)
     self._jSeparator2.setBounds(15, 535, 790, 10)
     self._jLabelParam.setBounds(15, 559, 132, 20)
     self._jTextFieldParam.setBounds(165, 556, 366, 26)
@@ -782,6 +785,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     self._jScanPanel.add(self._jTextFieldUA)
     self._jScanPanel.add(self._jLabelCustHeader)
     self._jScanPanel.add(self._jTextFieldCustHeader)
+    self._jScanPanel.add(self._jCustHeadCheckParam)
     self._jScanPanel.add(self._jSeparator2)
     self._jScanPanel.add(self._jLabelParam)
     self._jScanPanel.add(self._jTextFieldParam)
@@ -1000,7 +1004,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
     else:
       print 'Could not set the correct Python path.\n'
 
-    # Get Python version to confirm 2.7.x
+    # Get Python version to confirm 2.7.x or 3.x
     if 'Windows' in ostype and re.search('python.exe', self.pythonfile):
       try:
         pythonver = subprocess.check_output(self.pythonfile + ' -c "import sys; print(str(sys.version_info[0]) + str(sys.version_info[1]))"')
@@ -1082,6 +1086,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
         referer = ''
         ua = ''
         cookie = ''
+        headerString = ''
 
         for header in reqHeaders:
           if re.search('^Referer', header, re.IGNORECASE) is not None:
@@ -1090,12 +1095,15 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
             ua = re.sub('^User-Agent\:\s+', '', header, re.IGNORECASE)
           elif re.search('^Cookie', header, re.IGNORECASE) is not None:
             cookie = re.sub('^Cookie\:\s+', '', header, re.IGNORECASE)
+          elif ':' in header:
+            headerString += ("\\n" if headerString != "" else "") + header
 
         self._jTextFieldURL.setText(reqUrl)
         self._jTextData.setText(bodyData)
         self._jTextFieldCookie.setText(cookie)
         self._jTextFieldUA.setText(ua)
         self._jTextFieldReferer.setText(referer)
+        self._jTextFieldCustHeader.setText(headerString)
         self._jConfigTab.setSelectedComponent(self._jScrollPaneMain)
         self.scanMessage = message
         self.scanUrl = reqInfo.getUrl()
@@ -1105,7 +1113,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
         print 'Failed to add data to scan tab.'
 
   def printHeader(self):
-    print 'SQLiPy - 0.8.5\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
+    print 'SQLiPy - 0.8.6\nBurp interface to SQLMap via the SQLMap API\njosh.berry@codewatch.org\n\n'
 
   def setAPI(self, e):
     selectFile = swing.JFileChooser()
@@ -1499,7 +1507,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory, ITab, IExtensionStateList
       uadata = self._jTextFieldUA.getText()
       uacmd = ' --user-agent="' + self._jTextFieldUA.getText() + '"'
 
-    if re.search('[a-zA-Z0-9]', self._jTextFieldCustHeader.getText()) is not None:
+    if re.search('[a-zA-Z0-9]', self._jTextFieldCustHeader.getText()) is not None and self._jCustHeadCheckParam.isSelected():
       custheaderdata = self._jTextFieldCustHeader.getText()
       custheadercmd = ' --headers="' + self._jTextFieldCustHeader.getText() + '"'
 
