@@ -1,19 +1,22 @@
-<p>This extension integrates Burp Suite with SQLMap.</p>
+<p>SQLiPy integrates SQLMap using its API, enabling SQL injection scans directly within Burp Suite. The plugin connects to a running instance of the SQLMap API server to perform scans on requests.</p>
 
-<p>Requirements:</p>
+<h2>Features</h2>
 <ul>
-	<li>Jython 2.7 (up to 2.7.2) DO NOT USE Jython 2.7.3, it has a bug that will cause the extension to fail</li>
-    <li>Java 1.7 or later (the beta version of Jython 2.7 requires this). Note: Newer versions of Java do appear to work. Testing with jdk-11.0.7 works fine and newer versions are expected to work as well.</li>
-	<li>A running instance of the SQLMap API server.</li>
+  <li>Integrates SQLMap API for automated SQL injection scanning.</li>
+  <li>Option to manually start the SQLMap API server or connect to an existing one.</li>
+  <li>Initiates scans by right-clicking requests in the "Target" or "Proxy" tabs.</li>
+  <li>Displays scan results in the "Scanner Results" tab if vulnerabilities are detected.</li>
 </ul>
 
-<p>SQLMap is embedded within the extension; it will be automatically configured, so you can click <i>Start API</i>.
-In some cases you may need to manually adjust the configuration or run the SQLMap API manually.</p>
+<h2>Usage</h2>
+<ol>
+  <li>Start the SQLMap API server manually with the following command:<br>
+    <pre><code class="Code">python sqlmapapi.py -s -H &lt;ip&gt; -p &lt;port&gt;</code></pre>
+  </li>
+  <li>Alternatively, use the "SQLMap API" tab to select the IP/Port and provide the path to your <code class="InlineCode">sqlmapapi.py</code> and Python installations.</li>
+  <li>Once the SQLMap API is active, right-click a request in the "Request" sub-tab of the "Target" or "Proxy" tabs and select "SQLiPy Scan".</li>
+  <li>The request details will populate the SQLMap Scanner tab. Click the "Start Scan" button to initiate the scan.</li>
+  <li>If the page is vulnerable to SQL injection, the plugin will poll the results and add them to the "Scanner Results" tab.</li>
+</ol>
 
-<p>Once the SQLMap API is running, you just need to right-click in the 'Request' 
-sub tab of either the Target or Proxy main tabs and choose 'SQLiPy Scan' from 
-the context menu.
-This will populate the SQLMap Scanner tab with information about that request.  Clicking the 'Start Scan' button will execute a scan.</p>
-
-<p>If the page is vulnerable to SQL injection, then these will be added to the Scanner Results tab.
-</p>
+<p><strong>Note:</strong> Jython 2.7-2.7.2 is supported. DO NOT USE Jython 2.7.3, as it has a bug that will cause the extension to fail.<p>

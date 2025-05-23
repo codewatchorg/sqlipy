@@ -3,7 +3,7 @@ ExtensionType: 2
 Name: SQLiPy Sqlmap Integration
 RepoName: sqli-py
 ScreenVersion: 0.8.6
-SerialVersion: 23
+SerialVersion: 24
 MinPlatformVersion: 0
 ProOnly: False
 Author: Josh Berry @ CodeWatch
