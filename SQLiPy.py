@@ -132,7 +132,7 @@ class ThreadExtender(IBurpExtender, IContextMenuFactory, ITab, IScannerCheck):
     self.cbacks = cbacks
 
   def checkResults(self):
-    t = threading.currentThread()
+    t = threading.current_thread()
     time.sleep(5)
     print 'Checking results on task: '+self.sqlmaptask+'\n'
 
